@@ -1,0 +1,21 @@
+parameters:
+    level: 5
+    paths:
+        - src
+        - config
+    ignoreErrors:
+        # Laravel helper functions
+        - '#Call to undefined function env\(\)#'
+        - '#Call to undefined function storage_path\(\)#'
+        - '#Call to undefined function base_path\(\)#'
+        - '#Call to undefined function database_path\(\)#'
+        # Laravel Console Command magic methods
+        - '#Call to undefined method Illuminate\\Console\\Command::(argument|option|info|error|warn|line|newLine)\(\)#'
+        # Laravel Facades
+        - '#Undefined type Illuminate\\Console\\Command#'
+        - '#Undefined type Illuminate\\Support\\Facades\\(File|Config|DB)#'
+        # Function calls in different namespaces
+        - '#Call to undefined function Zaeem2396\\SchemaLens\\Commands\\(storage_path|base_path)\(\)#'
+    excludePaths:
+        - tests
+

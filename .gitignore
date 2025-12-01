@@ -1,0 +1,20 @@
+/vendor/
+composer.lock
+.phpunit.result.cache
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
+# Laravel specific
+/storage/app/schema-lens/
+/storage/logs/
+.env
+.env.backup
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
