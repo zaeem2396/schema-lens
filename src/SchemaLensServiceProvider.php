@@ -4,6 +4,7 @@ namespace Zaeem2396\SchemaLens;
 
 use Illuminate\Support\ServiceProvider;
 use Zaeem2396\SchemaLens\Commands\PreviewMigrationCommand;
+use Zaeem2396\SchemaLens\Commands\SafeMigrateCommand;
 
 /**
  * Schema Lens Service Provider
@@ -33,6 +34,7 @@ class SchemaLensServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 PreviewMigrationCommand::class,
+                SafeMigrateCommand::class,
             ]);
         }
 
