@@ -44,7 +44,7 @@ class MigrationParser
     protected function extractMethod(string $content, string $methodName): ?string
     {
         // Find method start
-        $pattern = '/public\s+function\s+' . preg_quote($methodName, '/') . '\s*\([^)]*\)\s*\{/';
+        $pattern = '/public\s+function\s+' . preg_quote($methodName, '/') . '\s*\([^)]*\)(?:\s*:\s*\S+)?\s*\{/';
         
         if (!preg_match($pattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
             return null;
