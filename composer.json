@@ -43,9 +43,11 @@
         "lint": "./vendor/bin/pint --test",
         "fix": "./vendor/bin/pint",
         "analyse": "./vendor/bin/phpstan analyse",
+        "test" : "./vendor/bin/phpunit",
         "check": [
             "@lint",
-            "@analyse"
+            "@analyse",
+            "@test"
         ]
     },
     "minimum-stability": "dev",
