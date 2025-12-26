@@ -1,6 +1,18 @@
 {
     "name": "zaeem2396/schema-lens",
     "description": "Laravel package to preview migration files against current MySQL schema with destructive change detection and data export",
+    "keywords": [
+        "laravel",
+        "migration",
+        "schema",
+        "mysql",
+        "database",
+        "preview",
+        "destructive-changes",
+        "data-export",
+        "artisan",
+        "cli"
+    ],
     "type": "library",
     "license": "MIT",
     "authors": [
