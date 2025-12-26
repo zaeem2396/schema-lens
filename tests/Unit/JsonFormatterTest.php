@@ -258,4 +258,3 @@ class JsonFormatterTest extends TestCase
         ];
     }
 }
-

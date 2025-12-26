@@ -290,4 +290,3 @@ class PreviewMigrationCommandTest extends TestCase
         File::deleteDirectory($customPath);
     }
 }
-

@@ -296,4 +296,3 @@ class DestructiveChangeDetectorTest extends TestCase
         $this->assertCount(0, $result);
     }
 }
-

@@ -142,10 +142,10 @@ class MigrationParserTest extends TestCase
             });
             $this->assertNotNull($tableOp, 'Table create operation should be detected');
             $this->assertEquals('posts', $tableOp['data']['table']);
-            
+
             // Mark this as a known limitation
             $this->markTestIncomplete(
-                'foreignId()->constrained() shorthand is not fully parsed. ' .
+                'foreignId()->constrained() shorthand is not fully parsed. '.
                 'Consider extending MigrationParser to support this syntax.'
             );
         }
@@ -240,4 +240,3 @@ class MigrationParserTest extends TestCase
         }
     }
 }
-

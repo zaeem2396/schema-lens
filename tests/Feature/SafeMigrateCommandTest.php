@@ -122,4 +122,3 @@ class SafeMigrateCommandTest extends TestCase
             ->expectsOutputToContain('Safe Migration');
     }
 }
-

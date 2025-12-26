@@ -293,4 +293,3 @@ class CliFormatterTest extends TestCase
         ];
     }
 }
-
