@@ -5,33 +5,38 @@ namespace Zaeem2396\SchemaLens\Tests\Feature;
 use Illuminate\Support\Facades\File;
 use Zaeem2396\SchemaLens\Tests\TestCase;
 
+/**
+ * PreviewMigrationCommand feature tests.
+ *
+ * Note: These tests require MySQL because the command uses SchemaIntrospector
+ * which queries MySQL's information_schema tables. Tests will be skipped
+ * if not running on MySQL.
+ */
 class PreviewMigrationCommandTest extends TestCase
 {
-    protected bool $hasDatabase = false;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Try to create a simple users table for testing
-        try {
-            $this->app['db']->connection()->getSchemaBuilder()->create('users', function ($table) {
-                $table->id();
-                $table->string('name');
-                $table->string('email')->unique();
-                $table->timestamps();
-            });
-            $this->hasDatabase = true;
-        } catch (\Exception $e) {
-            // Database not available, tests will be skipped
-            $this->hasDatabase = false;
+        // Only set up database tables if running on MySQL
+        if ($this->isMySQL()) {
+            try {
+                $this->app['db']->connection()->getSchemaBuilder()->create('users', function ($table) {
+                    $table->id();
+                    $table->string('name');
+                    $table->string('email')->unique();
+                    $table->timestamps();
+                });
+            } catch (\Exception $e) {
+                // Table might already exist
+            }
         }
     }
 
     protected function tearDown(): void
     {
         // Clean up
-        if ($this->hasDatabase) {
+        if ($this->isMySQL()) {
             try {
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('users');
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('posts');
@@ -43,17 +48,10 @@ class PreviewMigrationCommandTest extends TestCase
         parent::tearDown();
     }
 
-    protected function skipIfNoDatabase(): void
-    {
-        if (! $this->hasDatabase) {
-            $this->markTestSkipped('Database connection not available. Install SQLite or configure MySQL for testing.');
-        }
-    }
-
     /** @test */
     public function it_can_preview_a_create_table_migration(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         // First drop users so we can test creating it
         $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('users');
@@ -69,7 +67,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_can_preview_add_columns_migration(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('schema:preview', [
             'migration' => $this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'),
@@ -81,7 +79,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_detects_destructive_changes_and_returns_failure(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('schema:preview', [
             'migration' => $this->getFixturePath('2024_01_03_000000_drop_columns_from_users.php'),
@@ -93,7 +91,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_detects_drop_table_as_destructive(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('schema:preview', [
             'migration' => $this->getFixturePath('2024_01_05_000000_drop_users_table.php'),
@@ -105,7 +103,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_can_output_json_format(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         // Clean up any previous report
         $reportPath = storage_path('app/schema-lens/report.json');
@@ -133,7 +131,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_can_skip_data_export(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('schema:preview', [
             'migration' => $this->getFixturePath('2024_01_03_000000_drop_columns_from_users.php'),
@@ -146,7 +144,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_shows_error_for_non_existent_migration(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('schema:preview', [
             'migration' => 'non_existent_migration.php',
@@ -158,7 +156,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_shows_line_numbers_in_output(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('schema:preview', [
             'migration' => $this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'),
@@ -170,7 +168,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_shows_summary_in_output(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('schema:preview', [
             'migration' => $this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'),
@@ -184,7 +182,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_shows_rollback_simulation(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('schema:preview', [
             'migration' => $this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'),
@@ -196,7 +194,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_can_preview_complex_migration(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         // Add remember_token column for the complex migration to drop
         $this->app['db']->connection()->getSchemaBuilder()->table('users', function ($table) {
@@ -214,7 +212,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function json_output_contains_all_required_sections(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $reportPath = storage_path('app/schema-lens/report.json');
         if (File::exists($reportPath)) {
@@ -240,7 +238,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function json_summary_has_correct_structure(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $reportPath = storage_path('app/schema-lens/report.json');
         if (File::exists($reportPath)) {
@@ -266,7 +264,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_can_use_custom_export_path(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $customPath = storage_path('app/custom-exports');
         File::ensureDirectoryExists($customPath);

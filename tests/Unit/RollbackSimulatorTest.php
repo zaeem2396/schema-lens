@@ -10,46 +10,34 @@ use Zaeem2396\SchemaLens\Tests\TestCase;
 /**
  * RollbackSimulator tests.
  *
- * Note: These tests require a database connection because RollbackSimulator
- * depends on SchemaIntrospector which queries the database.
- * Tests will be skipped if no database is available.
+ * Note: These tests require MySQL because RollbackSimulator depends on
+ * SchemaIntrospector which queries MySQL's information_schema tables.
+ * Tests will be skipped if not running on MySQL.
  */
 class RollbackSimulatorTest extends TestCase
 {
     protected ?RollbackSimulator $simulator = null;
 
-    protected bool $hasDatabase = false;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Check if database connection works
-        try {
-            // Try a simple database operation to verify connection
-            $this->app['db']->connection()->getPdo();
-            $this->hasDatabase = true;
-
-            $introspector = new SchemaIntrospector;
-            $parser = new MigrationParser;
-            $this->simulator = new RollbackSimulator($introspector, $parser);
-        } catch (\Exception $e) {
-            $this->hasDatabase = false;
-            $this->simulator = null;
-        }
-    }
-
-    protected function skipIfNoDatabase(): void
-    {
-        if (! $this->hasDatabase || $this->simulator === null) {
-            $this->markTestSkipped('Database connection not available. Install SQLite or configure MySQL for RollbackSimulator tests.');
+        // Only create simulator if running on MySQL
+        if ($this->isMySQL()) {
+            try {
+                $introspector = new SchemaIntrospector;
+                $parser = new MigrationParser;
+                $this->simulator = new RollbackSimulator($introspector, $parser);
+            } catch (\Exception $e) {
+                $this->simulator = null;
+            }
         }
     }
 
     /** @test */
     public function it_simulates_rollback_for_migration_with_down_method(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_01_000000_create_users_table.php'));
 
@@ -64,7 +52,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_generates_sql_preview_for_table_drop(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_01_000000_create_users_table.php'));
 
@@ -83,7 +71,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_analyzes_impact_of_rollback(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_01_000000_create_users_table.php'));
 
@@ -99,7 +87,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_sets_critical_risk_for_table_drop(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_01_000000_create_users_table.php'));
 
@@ -109,7 +97,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_lists_affected_tables(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_01_000000_create_users_table.php'));
 
@@ -119,7 +107,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_generates_sql_for_column_drop(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'));
 
@@ -141,7 +129,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_includes_line_numbers_in_sql_preview(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_01_000000_create_users_table.php'));
 
@@ -154,7 +142,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_includes_operation_type_in_sql_preview(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_01_000000_create_users_table.php'));
 
@@ -167,7 +155,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_analyzes_column_drop_dependencies(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'));
 
@@ -192,7 +180,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_generates_sql_for_rename_column(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_04_000000_rename_column_in_users.php'));
 
@@ -214,7 +202,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function it_sets_high_risk_for_column_drops(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'));
 
@@ -235,7 +223,7 @@ class RollbackSimulatorTest extends TestCase
     /** @test */
     public function dependencies_have_required_fields(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $result = $this->simulator->simulate($this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'));
 

@@ -27,13 +27,33 @@ abstract class TestCase extends BaseTestCase
      */
     protected function defineEnvironment($app): void
     {
-        // Use SQLite in-memory for testing
-        $app['config']->set('database.default', 'testing');
-        $app['config']->set('database.connections.testing', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-        ]);
+        // Check if MySQL environment variables are set (e.g., in CI)
+        $dbConnection = env('DB_CONNECTION', 'sqlite');
+
+        if ($dbConnection === 'mysql') {
+            // Use MySQL (for CI with MySQL service)
+            $app['config']->set('database.default', 'testing');
+            $app['config']->set('database.connections.testing', [
+                'driver' => 'mysql',
+                'host' => env('DB_HOST', '127.0.0.1'),
+                'port' => env('DB_PORT', '3306'),
+                'database' => env('DB_DATABASE', 'testing'),
+                'username' => env('DB_USERNAME', 'root'),
+                'password' => env('DB_PASSWORD', ''),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+            ]);
+        } else {
+            // Use SQLite in-memory for local testing
+            // Note: MySQL tests require information_schema which SQLite doesn't have
+            $app['config']->set('database.default', 'testing');
+            $app['config']->set('database.connections.testing', [
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
+            ]);
+        }
 
         // Schema Lens config
         $app['config']->set('schema-lens.export.row_limit', 1000);
@@ -49,5 +69,32 @@ abstract class TestCase extends BaseTestCase
     protected function getFixturePath(string $filename = ''): string
     {
         return __DIR__.'/Fixtures'.($filename ? '/'.$filename : '');
+    }
+
+    /**
+     * Check if we're running on MySQL (required for information_schema tests).
+     */
+    protected function isMySQL(): bool
+    {
+        try {
+            $driver = $this->app['db']->connection()->getDriverName();
+
+            return in_array($driver, ['mysql', 'mariadb']);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Skip test if not running on MySQL.
+     * SchemaIntrospector requires MySQL's information_schema tables.
+     */
+    protected function skipIfNotMySQL(): void
+    {
+        if (! $this->isMySQL()) {
+            $this->markTestSkipped(
+                'This test requires MySQL. SchemaIntrospector uses information_schema which is MySQL-specific.'
+            );
+        }
     }
 }

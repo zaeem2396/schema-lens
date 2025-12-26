@@ -4,30 +4,35 @@ namespace Zaeem2396\SchemaLens\Tests\Feature;
 
 use Zaeem2396\SchemaLens\Tests\TestCase;
 
+/**
+ * SafeMigrateCommand feature tests.
+ *
+ * Note: These tests require MySQL because the command uses SchemaIntrospector
+ * which queries MySQL's information_schema tables.
+ */
 class SafeMigrateCommandTest extends TestCase
 {
-    protected bool $hasDatabase = false;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Try to create migrations table
-        try {
-            $this->app['db']->connection()->getSchemaBuilder()->create('migrations', function ($table) {
-                $table->id();
-                $table->string('migration');
-                $table->integer('batch');
-            });
-            $this->hasDatabase = true;
-        } catch (\Exception $e) {
-            $this->hasDatabase = false;
+        // Only set up database tables if running on MySQL
+        if ($this->isMySQL()) {
+            try {
+                $this->app['db']->connection()->getSchemaBuilder()->create('migrations', function ($table) {
+                    $table->id();
+                    $table->string('migration');
+                    $table->integer('batch');
+                });
+            } catch (\Exception $e) {
+                // Table might already exist
+            }
         }
     }
 
     protected function tearDown(): void
     {
-        if ($this->hasDatabase) {
+        if ($this->isMySQL()) {
             try {
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('migrations');
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('users');
@@ -39,17 +44,10 @@ class SafeMigrateCommandTest extends TestCase
         parent::tearDown();
     }
 
-    protected function skipIfNoDatabase(): void
-    {
-        if (! $this->hasDatabase) {
-            $this->markTestSkipped('Database connection not available.');
-        }
-    }
-
     /** @test */
     public function it_shows_nothing_to_migrate_when_no_pending_migrations(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         // The command should check for pending migrations
         // Since we don't have any migrations set up in the standard location,
@@ -115,7 +113,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_shows_schema_lens_header(): void
     {
-        $this->skipIfNoDatabase();
+        $this->skipIfNotMySQL();
 
         $this->artisan('migrate:safe')
             ->expectsOutputToContain('Schema Lens')

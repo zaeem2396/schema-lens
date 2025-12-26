@@ -19,7 +19,7 @@
     "require-dev": {
         "orchestra/testbench": "^8.0|^9.0|^10.0",
         "phpunit/phpunit": "^10.0|^11.0",
-        "laravel/pint": "^1.26",
+        "laravel/pint": "^1.0",
         "phpstan/phpstan": "^2.1"
     },
     "autoload": {
