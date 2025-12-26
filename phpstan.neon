@@ -17,5 +17,6 @@ parameters:
         # Function calls in different namespaces
         - '#Call to undefined function Zaeem2396\\SchemaLens\\Commands\\(storage_path|base_path)\(\)#'
     excludePaths:
-        - tests
-
+        analyseAndScan:
+            - tests (?)
+    reportUnmatchedIgnoredErrors: false

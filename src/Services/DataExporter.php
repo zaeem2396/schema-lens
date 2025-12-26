@@ -9,14 +9,16 @@ use Illuminate\Support\Str;
 class DataExporter
 {
     protected string $exportPath;
+
     protected bool $compress;
+
     protected ?int $rowLimit;
 
     public function __construct()
     {
         $storagePath = config('schema-lens.export.storage_path', 'app/schema-lens/exports');
         // Resolve storage path - handle both relative and absolute paths
-        if (function_exists('storage_path') && !str_starts_with($storagePath, '/')) {
+        if (function_exists('storage_path') && ! str_starts_with($storagePath, '/')) {
             $this->exportPath = storage_path($storagePath);
         } else {
             $this->exportPath = $storagePath;
@@ -25,7 +27,7 @@ class DataExporter
         $this->rowLimit = config('schema-lens.export.row_limit', 1000);
 
         // Ensure export directory exists
-        if (!File::exists($this->exportPath)) {
+        if (! File::exists($this->exportPath)) {
             File::makeDirectory($this->exportPath, 0755, true);
         }
     }
@@ -46,11 +48,11 @@ class DataExporter
             $columns = $change['affected_columns'];
 
             foreach ($tables as $table) {
-                if (!DB::getSchemaBuilder()->hasTable($table)) {
+                if (! DB::getSchemaBuilder()->hasTable($table)) {
                     continue;
                 }
 
-                $exportDir = $this->exportPath . '/' . $migrationName . '_' . $timestamp . '_v' . $version;
+                $exportDir = $this->exportPath.'/'.$migrationName.'_'.$timestamp.'_v'.$version;
                 File::makeDirectory($exportDir, 0755, true);
 
                 // Export full table or specific columns
@@ -63,7 +65,7 @@ class DataExporter
                         return $col['table'] === $table;
                     });
 
-                    if (!empty($tableColumns)) {
+                    if (! empty($tableColumns)) {
                         $columnNames = array_column($tableColumns, 'column');
                         $data = $this->exportTableColumns($table, $columnNames, $exportDir);
                     } else {
@@ -85,7 +87,7 @@ class DataExporter
         }
 
         // Create restore metadata
-        if (!empty($exports)) {
+        if (! empty($exports)) {
             $this->createRestoreMetadata($exports, $migrationFile, $version, $timestamp);
         }
 
@@ -109,11 +111,11 @@ class DataExporter
         }, $data);
 
         // Export as JSON
-        $jsonFile = $exportDir . '/' . $table . '.json';
+        $jsonFile = $exportDir.'/'.$table.'.json';
         File::put($jsonFile, json_encode($dataArray, JSON_PRETTY_PRINT));
 
         // Export as CSV
-        $csvFile = $exportDir . '/' . $table . '.csv';
+        $csvFile = $exportDir.'/'.$table.'.csv';
         $this->exportToCsv($dataArray, $csvFile);
 
         $files = [
@@ -149,11 +151,11 @@ class DataExporter
         $safeSuffix = Str::slug($columnSuffix, '_');
 
         // Export as JSON
-        $jsonFile = $exportDir . '/' . $table . '_' . $safeSuffix . '.json';
+        $jsonFile = $exportDir.'/'.$table.'_'.$safeSuffix.'.json';
         File::put($jsonFile, json_encode($dataArray, JSON_PRETTY_PRINT));
 
         // Export as CSV
-        $csvFile = $exportDir . '/' . $table . '_' . $safeSuffix . '.csv';
+        $csvFile = $exportDir.'/'.$table.'_'.$safeSuffix.'.csv';
         $this->exportToCsv($dataArray, $csvFile);
 
         $files = [
@@ -163,7 +165,7 @@ class DataExporter
 
         // Compress if enabled
         if ($this->compress) {
-            $files['compressed'] = $this->compressExport($exportDir, $table . '_' . $safeSuffix);
+            $files['compressed'] = $this->compressExport($exportDir, $table.'_'.$safeSuffix);
         }
 
         return $files;
@@ -176,6 +178,7 @@ class DataExporter
     {
         if (empty($data)) {
             File::put($filePath, '');
+
             return;
         }
 
@@ -198,13 +201,13 @@ class DataExporter
      */
     protected function compressExport(string $exportDir, string $prefix): ?string
     {
-        if (!extension_loaded('zip')) {
+        if (! extension_loaded('zip')) {
             return null;
         }
 
-        $zipFile = $exportDir . '/' . $prefix . '.zip';
-        
-        $zip = new \ZipArchive();
+        $zipFile = $exportDir.'/'.$prefix.'.zip';
+
+        $zip = new \ZipArchive;
         if ($zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
             $files = File::allFiles($exportDir);
             foreach ($files as $file) {
@@ -213,6 +216,7 @@ class DataExporter
                 }
             }
             $zip->close();
+
             return $zipFile;
         }
 
@@ -224,8 +228,8 @@ class DataExporter
      */
     protected function generateVersion(): string
     {
-        $versionFile = $this->exportPath . '/.version';
-        
+        $versionFile = $this->exportPath.'/.version';
+
         if (File::exists($versionFile)) {
             $version = (int) File::get($versionFile);
             $version++;
@@ -233,9 +237,9 @@ class DataExporter
             $version = 1;
         }
 
-        File::put($versionFile, $version);
+        File::put($versionFile, (string) $version);
 
-        return str_pad($version, 4, '0', STR_PAD_LEFT);
+        return str_pad((string) $version, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -253,7 +257,7 @@ class DataExporter
         ];
 
         $exportDir = dirname($exports[0]['export_path']);
-        $metadataFile = $exportDir . '/restore_metadata.json';
+        $metadataFile = $exportDir.'/restore_metadata.json';
         File::put($metadataFile, json_encode($metadata, JSON_PRETTY_PRINT));
     }
 
@@ -271,7 +275,7 @@ class DataExporter
 
             $instruction = [
                 'table' => $table,
-                'operation' => $operation['type'] . ':' . $operation['action'],
+                'operation' => $operation['type'].':'.$operation['action'],
                 'restore_method' => $this->getRestoreMethod($operation),
                 'data_files' => [
                     'json' => $files['json'] ?? null,
@@ -309,4 +313,3 @@ class DataExporter
         return 'Review exported data and restore manually';
     }
 }
-

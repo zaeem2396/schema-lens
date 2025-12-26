@@ -35,8 +35,7 @@ class JsonFormatter
             'charset' => count($diff['charset'] ?? []),
             'collation' => count($diff['collation'] ?? []),
             'destructive_changes_count' => count($destructiveChanges),
-            'has_destructive_changes' => !empty($destructiveChanges),
+            'has_destructive_changes' => ! empty($destructiveChanges),
         ];
     }
 }
-

@@ -29,15 +29,9 @@ php artisan schema:preview database/migrations/your_migration.php
 composer require zaeem2396/schema-lens
 ```
 
-For Laravel 10.x:
-```bash
-composer require zaeem2396/schema-lens:^1.0
-```
-
-For Laravel 11.x:
-```bash
-composer require zaeem2396/schema-lens:^2.0
-```
+The package supports:
+- **PHP 8.1+**
+- **Laravel 10.x, 11.x, and 12.x**
 
 ## Configuration
 
@@ -53,7 +47,7 @@ This will create `config/schema-lens.php` with the following options:
 return [
     'export' => [
         'row_limit' => env('SCHEMA_LENS_EXPORT_ROW_LIMIT', 1000),
-        'storage_path' => storage_path('app/schema-lens/exports'),
+        'storage_path' => 'app/schema-lens/exports',
         'compress' => env('SCHEMA_LENS_COMPRESS_EXPORTS', true),
     ],
     'output' => [
@@ -96,6 +90,27 @@ If you want to preview without exporting data (even if destructive changes are d
 ```bash
 php artisan schema:preview database/migrations/2024_01_01_000000_create_users_table.php --no-export
 ```
+
+### Safe Migration (with auto-backup)
+
+Run migrations with automatic destructive change detection and data backup:
+
+```bash
+php artisan migrate:safe
+```
+
+**Options:**
+- `--force` - Force the operation to run in production
+- `--seed` - Run seeders after migration
+- `--step` - Run migrations one at a time
+- `--pretend` - Dump the SQL queries that would be run
+- `--no-backup` - Skip data backup for destructive changes
+
+This command:
+1. Analyzes all pending migrations for destructive changes
+2. Automatically backs up affected data before proceeding
+3. Asks for confirmation if destructive changes are detected
+4. Runs the actual migration
 
 ## What It Detects
 
@@ -234,7 +249,7 @@ Schema Lens analyzes the `down()` method of migrations to:
 ## Requirements
 
 - PHP 8.1+
-- Laravel 10.x or 11.x
+- Laravel 10.x, 11.x, or 12.x
 - MySQL 5.7+ or MariaDB 10.2+
 - Access to `information_schema` database
 

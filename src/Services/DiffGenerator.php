@@ -2,8 +2,6 @@
 
 namespace Zaeem2396\SchemaLens\Services;
 
-use Illuminate\Support\Collection;
-
 class DiffGenerator
 {
     protected SchemaIntrospector $introspector;
@@ -116,6 +114,7 @@ class DiffGenerator
 
         if ($action === 'add') {
             $columnExists = $columnName && $this->introspector->columnExists($tableName, $columnName);
+
             return [
                 'action' => 'add',
                 'table' => $tableName,
@@ -131,6 +130,7 @@ class DiffGenerator
         } elseif ($action === 'modify') {
             $columnExists = $columnName && $this->introspector->columnExists($tableName, $columnName);
             $currentColumn = $currentColumns->firstWhere('name', $columnName);
+
             return [
                 'action' => 'modify',
                 'table' => $tableName,
@@ -146,6 +146,7 @@ class DiffGenerator
         } elseif ($action === 'drop') {
             $columnExists = $columnName && $this->introspector->columnExists($tableName, $columnName);
             $currentColumn = $currentColumns->firstWhere('name', $columnName);
+
             return [
                 'action' => 'drop',
                 'table' => $tableName,
@@ -161,6 +162,7 @@ class DiffGenerator
         } elseif ($action === 'rename') {
             $fromExists = $this->introspector->columnExists($tableName, $data['from']);
             $toExists = $this->introspector->columnExists($tableName, $data['to']);
+
             return [
                 'action' => 'rename',
                 'table' => $tableName,
@@ -169,8 +171,8 @@ class DiffGenerator
                 'from_exists' => $fromExists,
                 'to_exists' => $toExists,
                 'line' => $line,
-                'status' => $fromExists && !$toExists ? 'destructive' : ($fromExists ? 'warning' : 'error'),
-                'message' => $fromExists && !$toExists
+                'status' => $fromExists && ! $toExists ? 'destructive' : ($fromExists ? 'warning' : 'error'),
+                'message' => $fromExists && ! $toExists
                     ? "Will RENAME column '{$tableName}.{$data['from']}' to '{$data['to']}' (DESTRUCTIVE)"
                     : ($fromExists ? "Column '{$data['to']}' already exists" : "Column '{$data['from']}' does not exist"),
             ];
@@ -195,6 +197,7 @@ class DiffGenerator
             $indexExists = $indexName && $currentIndexes->contains(function ($index) use ($indexName) {
                 return ($index['name'] ?? null) === $indexName;
             });
+
             return [
                 'action' => 'add',
                 'table' => $tableName,
@@ -211,6 +214,7 @@ class DiffGenerator
         } elseif ($action === 'drop') {
             $currentIndex = $currentIndexes->firstWhere('name', $indexName);
             $indexExists = $indexName && $currentIndex !== null;
+
             return [
                 'action' => 'drop',
                 'table' => $tableName,
@@ -264,6 +268,7 @@ class DiffGenerator
             $fkName = $data['name'] ?? null;
             $currentFk = $currentForeignKeys->firstWhere('name', $fkName);
             $fkExists = $fkName && $currentFk !== null;
+
             return [
                 'action' => 'drop',
                 'table' => $tableName,
@@ -356,4 +361,3 @@ class DiffGenerator
         ];
     }
 }
-

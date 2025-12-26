@@ -3,12 +3,11 @@
 namespace Zaeem2396\SchemaLens\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
-use Zaeem2396\SchemaLens\Services\SchemaIntrospector;
-use Zaeem2396\SchemaLens\Services\MigrationParser;
-use Zaeem2396\SchemaLens\Services\DiffGenerator;
-use Zaeem2396\SchemaLens\Services\DestructiveChangeDetector;
 use Zaeem2396\SchemaLens\Services\DataExporter;
+use Zaeem2396\SchemaLens\Services\DestructiveChangeDetector;
+use Zaeem2396\SchemaLens\Services\DiffGenerator;
+use Zaeem2396\SchemaLens\Services\MigrationParser;
+use Zaeem2396\SchemaLens\Services\SchemaIntrospector;
 
 class SafeMigrateCommand extends Command
 {
@@ -22,20 +21,24 @@ class SafeMigrateCommand extends Command
     protected $description = 'Run migrations with automatic destructive change detection and data backup';
 
     protected SchemaIntrospector $introspector;
+
     protected MigrationParser $parser;
+
     protected DiffGenerator $diffGenerator;
+
     protected DestructiveChangeDetector $detector;
+
     protected DataExporter $exporter;
 
     public function __construct()
     {
         parent::__construct();
-        
-        $this->introspector = new SchemaIntrospector();
-        $this->parser = new MigrationParser();
+
+        $this->introspector = new SchemaIntrospector;
+        $this->parser = new MigrationParser;
         $this->diffGenerator = new DiffGenerator($this->introspector);
-        $this->detector = new DestructiveChangeDetector();
-        $this->exporter = new DataExporter();
+        $this->detector = new DestructiveChangeDetector;
+        $this->exporter = new DataExporter;
     }
 
     public function handle(): int
@@ -49,10 +52,11 @@ class SafeMigrateCommand extends Command
 
         if (empty($pendingMigrations)) {
             $this->info('✅ Nothing to migrate.');
+
             return Command::SUCCESS;
         }
 
-        $this->info("Found " . count($pendingMigrations) . " pending migration(s):");
+        $this->info('Found '.count($pendingMigrations).' pending migration(s):');
         foreach ($pendingMigrations as $migration) {
             $this->line("  - {$migration}");
         }
@@ -63,22 +67,22 @@ class SafeMigrateCommand extends Command
         $migrationAnalysis = [];
 
         foreach ($pendingMigrations as $migrationFile) {
-            $this->info("📋 Analyzing: " . basename($migrationFile));
-            
+            $this->info('📋 Analyzing: '.basename($migrationFile));
+
             $analysis = $this->analyzeMigration($migrationFile);
             $migrationAnalysis[$migrationFile] = $analysis;
 
-            if (!empty($analysis['destructive_changes'])) {
+            if (! empty($analysis['destructive_changes'])) {
                 $allDestructiveChanges[$migrationFile] = $analysis['destructive_changes'];
                 $this->displayDestructiveChanges($analysis['destructive_changes']);
             } else {
-                $this->info("  ✅ No destructive changes detected");
+                $this->info('  ✅ No destructive changes detected');
             }
             $this->newLine();
         }
 
         // If destructive changes found, warn and confirm
-        if (!empty($allDestructiveChanges)) {
+        if (! empty($allDestructiveChanges)) {
             $this->newLine();
             $this->error('╔══════════════════════════════════════════════════════════════╗');
             $this->error('║           ⚠️  DESTRUCTIVE CHANGES DETECTED!                  ║');
@@ -90,11 +94,11 @@ class SafeMigrateCommand extends Command
             $this->newLine();
 
             // Export data before proceeding (unless --no-backup)
-            if (!$this->option('no-backup')) {
+            if (! $this->option('no-backup')) {
                 $this->info('💾 Creating backup of affected data...');
                 foreach ($allDestructiveChanges as $migrationFile => $changes) {
                     $exports = $this->exporter->exportDestructiveChanges($changes, $migrationFile);
-                    if (!empty($exports)) {
+                    if (! empty($exports)) {
                         foreach ($exports as $export) {
                             $this->line("  📁 Exported: {$export['table']} → {$export['export_path']}");
                         }
@@ -107,7 +111,7 @@ class SafeMigrateCommand extends Command
             // Ask for confirmation
             $this->warn('The following data may be permanently lost:');
             foreach ($allDestructiveChanges as $migrationFile => $changes) {
-                $this->line("  " . basename($migrationFile) . ":");
+                $this->line('  '.basename($migrationFile).':');
                 foreach ($changes as $change) {
                     $op = $change['operation'];
                     $tables = implode(', ', $change['affected_tables'] ?? []);
@@ -116,8 +120,9 @@ class SafeMigrateCommand extends Command
             }
             $this->newLine();
 
-            if (!$this->confirm('⚠️  Do you want to proceed with migration?', false)) {
+            if (! $this->confirm('⚠️  Do you want to proceed with migration?', false)) {
                 $this->info('❌ Migration cancelled by user.');
+
                 return Command::FAILURE;
             }
         }
@@ -142,8 +147,8 @@ class SafeMigrateCommand extends Command
         if ($exitCode === 0) {
             $this->newLine();
             $this->info('✅ Migration completed successfully!');
-            
-            if (!empty($allDestructiveChanges) && !$this->option('no-backup')) {
+
+            if (! empty($allDestructiveChanges) && ! $this->option('no-backup')) {
                 $this->info('💾 Your data backups are available in: storage/app/schema-lens/exports/');
             }
         }
@@ -158,17 +163,17 @@ class SafeMigrateCommand extends Command
     {
         $migrator = app('migrator');
         $migrationsPath = database_path('migrations');
-        
+
         // Get all migration files
         $files = $migrator->getMigrationFiles($migrationsPath);
-        
+
         // Get already run migrations
         $ran = $migrator->getRepository()->getRan();
-        
+
         // Filter to get only pending migrations
         $pending = [];
         foreach ($files as $name => $path) {
-            if (!in_array($name, $ran)) {
+            if (! in_array($name, $ran)) {
                 $pending[] = $path;
             }
         }
@@ -201,7 +206,8 @@ class SafeMigrateCommand extends Command
                 'operations' => $upOperations->toArray(),
             ];
         } catch (\Exception $e) {
-            $this->error("  ❌ Error analyzing migration: " . $e->getMessage());
+            $this->error('  ❌ Error analyzing migration: '.$e->getMessage());
+
             return [
                 'diff' => [],
                 'destructive_changes' => [],
@@ -220,20 +226,19 @@ class SafeMigrateCommand extends Command
             $op = $change['operation'];
             $risk = strtoupper($change['risk_level']);
             $icon = $risk === 'CRITICAL' ? '🔴' : ($risk === 'HIGH' ? '🟠' : '🟡');
-            
+
             $this->line("  {$icon} [{$risk}] {$op['type']}::{$op['action']}");
-            
-            if (!empty($change['affected_tables'])) {
-                $this->line("     Tables: " . implode(', ', $change['affected_tables']));
+
+            if (! empty($change['affected_tables'])) {
+                $this->line('     Tables: '.implode(', ', $change['affected_tables']));
             }
-            
-            if (!empty($change['affected_columns'])) {
+
+            if (! empty($change['affected_columns'])) {
                 $cols = array_map(function ($col) {
-                    return ($col['table'] ?? '') . '.' . ($col['column'] ?? '');
+                    return ($col['table'] ?? '').'.'.($col['column'] ?? '');
                 }, $change['affected_columns']);
-                $this->line("     Columns: " . implode(', ', $cols));
+                $this->line('     Columns: '.implode(', ', $cols));
             }
         }
     }
 }
-

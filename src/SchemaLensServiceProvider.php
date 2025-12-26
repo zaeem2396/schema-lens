@@ -8,7 +8,7 @@ use Zaeem2396\SchemaLens\Commands\SafeMigrateCommand;
 
 /**
  * Schema Lens Service Provider
- * 
+ *
  * Note: The linter may show "Undefined type" for ServiceProvider, but this is a false positive.
  * The Illuminate\Support\ServiceProvider class is available at runtime when installed in Laravel.
  * DO NOT change this to extend SchemaLensServiceProvider (itself) - that would cause a fatal error.
@@ -21,7 +21,7 @@ class SchemaLensServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/schema-lens.php',
+            __DIR__.'/../config/schema-lens.php',
             'schema-lens'
         );
     }
@@ -39,8 +39,7 @@ class SchemaLensServiceProvider extends ServiceProvider
         }
 
         $this->publishes([
-            __DIR__ . '/../config/schema-lens.php' => config_path('schema-lens.php'),
+            __DIR__.'/../config/schema-lens.php' => config_path('schema-lens.php'),
         ], 'schema-lens-config');
     }
 }
-

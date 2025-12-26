@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 class MigrationParser
 {
     protected array $operations = [];
+
     protected array $lineMap = [];
 
     /**
@@ -44,9 +45,9 @@ class MigrationParser
     protected function extractMethod(string $content, string $methodName): ?string
     {
         // Find method start
-        $pattern = '/public\s+function\s+' . preg_quote($methodName, '/') . '\s*\([^)]*\)(?:\s*:\s*\S+)?\s*\{/';
-        
-        if (!preg_match($pattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
+        $pattern = '/public\s+function\s+'.preg_quote($methodName, '/').'\s*\([^)]*\)(?:\s*:\s*\S+)?\s*\{/';
+
+        if (! preg_match($pattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
             return null;
         }
 
@@ -62,7 +63,7 @@ class MigrationParser
 
             // Handle string literals
             if (($char === '"' || $char === "'") && ($pos === 0 || $content[$pos - 1] !== '\\')) {
-                if (!$inString) {
+                if (! $inString) {
                     $inString = true;
                     $stringChar = $char;
                 } elseif ($char === $stringChar) {
@@ -72,7 +73,7 @@ class MigrationParser
             }
 
             // Count braces only when not in string
-            if (!$inString) {
+            if (! $inString) {
                 if ($char === '{') {
                     $braceCount++;
                 } elseif ($char === '}') {
@@ -80,6 +81,7 @@ class MigrationParser
                     if ($braceCount === 0) {
                         // Found matching closing brace
                         $methodContent = substr($content, $startPos + 1, $pos - $startPos - 1);
+
                         return $methodContent;
                     }
                 }
@@ -119,7 +121,7 @@ class MigrationParser
                     $this->addOperation('table', $operation === 'create' ? 'create' : 'modify', [
                         'table' => $tableName,
                     ], $lineNumber, $direction);
-                } elseif ($operation === 'drop' || $operation === 'dropIfExists') {
+                } else {
                     $this->addOperation('table', 'drop', [
                         'table' => $tableName,
                     ], $lineNumber, $direction);
@@ -130,7 +132,7 @@ class MigrationParser
             if ($currentTable && preg_match('/->(string|integer|bigInteger|text|boolean|date|datetime|timestamp|decimal|float|double|enum|json|binary|char|tinyInteger|smallInteger|mediumInteger|unsignedInteger|unsignedBigInteger|unsignedTinyInteger|unsignedSmallInteger|unsignedMediumInteger|longText|mediumText|tinyText|jsonb|uuid|ipAddress|macAddress|geometry|point|lineString|polygon|geometryCollection|multiPoint|multiLineString|multiPolygon|multiPolygonZ)\s*\(/', $trimmed, $matches)) {
                 $columnType = $matches[1];
                 $columnName = $this->extractColumnName($trimmed);
-                
+
                 if ($columnName) {
                     $this->addOperation('column', 'add', [
                         'table' => $currentTable,
@@ -199,7 +201,7 @@ class MigrationParser
             if ($currentTable && preg_match('/->(foreign|foreignId)\s*\(/', $trimmed)) {
                 $columns = $this->extractArrayArgument($trimmed);
                 $column = $this->extractStringArgument($trimmed);
-                
+
                 // Try to find references() call on next lines
                 $referencesLine = $this->findReferencesLine($lines, $localIndex);
                 if ($referencesLine) {
@@ -262,10 +264,11 @@ class MigrationParser
     protected function findMethodStartLine(array $lines, string $methodName): int
     {
         foreach ($lines as $index => $line) {
-            if (preg_match('/public\s+function\s+' . $methodName . '\s*\(/', $line)) {
+            if (preg_match('/public\s+function\s+'.$methodName.'\s*\(/', $line)) {
                 return $index;
             }
         }
+
         return 0;
     }
 
@@ -277,6 +280,7 @@ class MigrationParser
         if (preg_match('/->\w+\s*\(\s*[\'"]([^\'"]+)[\'"]/', $line, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 
@@ -288,6 +292,7 @@ class MigrationParser
         if (preg_match('/\(\s*[\'"]([^\'"]+)[\'"]/', $line, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 
@@ -302,8 +307,10 @@ class MigrationParser
             if (preg_match_all('/[\'"]([^\'"]+)[\'"]/', $content, $itemMatches)) {
                 $items = $itemMatches[1];
             }
+
             return $items;
         }
+
         return [];
     }
 
@@ -315,6 +322,7 @@ class MigrationParser
         if (preg_match('/->\w+\s*\([^,]+,\s*[\'"]([^\'"]+)[\'"]/', $line, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 
@@ -328,6 +336,7 @@ class MigrationParser
                 return $lines[$i];
             }
         }
+
         return null;
     }
 
@@ -339,6 +348,7 @@ class MigrationParser
         if (preg_match('/->references\s*\(\s*[\'"]([^\'"]+)[\'"]/', $line, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 
@@ -350,6 +360,7 @@ class MigrationParser
         if (preg_match('/->references\s*\([^,]+,\s*[\'"]([^\'"]+)[\'"]/', $line, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 
@@ -361,6 +372,7 @@ class MigrationParser
         if (preg_match('/->onUpdate\s*\(\s*[\'"]([^\'"]+)[\'"]/', $line, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 
@@ -372,6 +384,7 @@ class MigrationParser
         if (preg_match('/->onDelete\s*\(\s*[\'"]([^\'"]+)[\'"]/', $line, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 
@@ -406,4 +419,3 @@ class MigrationParser
         });
     }
 }
-

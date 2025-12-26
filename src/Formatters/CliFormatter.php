@@ -2,8 +2,6 @@
 
 namespace Zaeem2396\SchemaLens\Formatters;
 
-use Illuminate\Support\Str;
-
 class CliFormatter
 {
     /**
@@ -20,7 +18,7 @@ class CliFormatter
         $output[] = '';
 
         // Destructive changes warning
-        if (!empty($destructiveChanges)) {
+        if (! empty($destructiveChanges)) {
             $output[] = $this->formatDestructiveChanges($destructiveChanges);
             $output[] = '';
         }
@@ -30,13 +28,13 @@ class CliFormatter
         $output[] = '';
 
         // Rollback simulation
-        if (!empty($rollback) && $rollback['has_rollback']) {
+        if (! empty($rollback) && $rollback['has_rollback']) {
             $output[] = $this->formatRollback($rollback);
             $output[] = '';
         }
 
         // Export information
-        if (!empty($exports)) {
+        if (! empty($exports)) {
             $output[] = $this->formatExports($exports);
             $output[] = '';
         }
@@ -49,9 +47,9 @@ class CliFormatter
      */
     protected function header(): string
     {
-        return "╔══════════════════════════════════════════════════════════════╗\n" .
-               "║          Schema Lens - Migration Preview Report            ║\n" .
-               "╚══════════════════════════════════════════════════════════════╝";
+        return "╔══════════════════════════════════════════════════════════════╗\n".
+               "║          Schema Lens - Migration Preview Report            ║\n".
+               '╚══════════════════════════════════════════════════════════════╝';
     }
 
     /**
@@ -59,8 +57,8 @@ class CliFormatter
      */
     protected function formatSummary(array $diff, array $destructiveChanges): string
     {
-        $summary = ["📊 SUMMARY"];
-        $summary[] = str_repeat("─", 60);
+        $summary = ['📊 SUMMARY'];
+        $summary[] = str_repeat('─', 60);
 
         $counts = [
             'tables' => count($diff['tables'] ?? []),
@@ -80,9 +78,9 @@ class CliFormatter
         $summary[] = "Charset:       {$counts['charset']}";
         $summary[] = "Collation:     {$counts['collation']}";
 
-        if (!empty($destructiveChanges)) {
-            $summary[] = "";
-            $summary[] = "⚠️  DESTRUCTIVE CHANGES: " . count($destructiveChanges);
+        if (! empty($destructiveChanges)) {
+            $summary[] = '';
+            $summary[] = '⚠️  DESTRUCTIVE CHANGES: '.count($destructiveChanges);
         }
 
         return implode("\n", $summary);
@@ -93,28 +91,28 @@ class CliFormatter
      */
     protected function formatDestructiveChanges(array $destructiveChanges): string
     {
-        $output = ["⚠️  DESTRUCTIVE CHANGES DETECTED"];
-        $output[] = str_repeat("═", 60);
+        $output = ['⚠️  DESTRUCTIVE CHANGES DETECTED'];
+        $output[] = str_repeat('═', 60);
 
         foreach ($destructiveChanges as $change) {
             $op = $change['operation'];
             $risk = strtoupper($change['risk_level']);
             $line = $op['line'] ?? 'N/A';
 
-            $output[] = "";
+            $output[] = '';
             $output[] = "  Risk Level: {$risk}";
             $output[] = "  Operation:  {$op['type']}::{$op['action']}";
             $output[] = "  Line:       {$line}";
 
-            if (!empty($change['affected_tables'])) {
-                $output[] = "  Tables:     " . implode(', ', $change['affected_tables']);
+            if (! empty($change['affected_tables'])) {
+                $output[] = '  Tables:     '.implode(', ', $change['affected_tables']);
             }
 
-            if (!empty($change['affected_columns'])) {
+            if (! empty($change['affected_columns'])) {
                 $cols = array_map(function ($col) {
-                    return ($col['table'] ?? '') . '.' . ($col['column'] ?? '');
+                    return ($col['table'] ?? '').'.'.($col['column'] ?? '');
                 }, $change['affected_columns']);
-                $output[] = "  Columns:    " . implode(', ', $cols);
+                $output[] = '  Columns:    '.implode(', ', $cols);
             }
         }
 
@@ -126,11 +124,11 @@ class CliFormatter
      */
     protected function formatDiffs(array $diff): string
     {
-        $output = ["📋 DETAILED CHANGES"];
-        $output[] = str_repeat("─", 60);
+        $output = ['📋 DETAILED CHANGES'];
+        $output[] = str_repeat('─', 60);
 
         // Tables
-        if (!empty($diff['tables'])) {
+        if (! empty($diff['tables'])) {
             $output[] = "\n📦 TABLES:";
             foreach ($diff['tables'] as $tableDiff) {
                 $output[] = $this->formatDiffItem($tableDiff, 'table');
@@ -138,7 +136,7 @@ class CliFormatter
         }
 
         // Columns
-        if (!empty($diff['columns'])) {
+        if (! empty($diff['columns'])) {
             $output[] = "\n📝 COLUMNS:";
             foreach ($diff['columns'] as $columnDiff) {
                 $output[] = $this->formatDiffItem($columnDiff, 'column');
@@ -146,7 +144,7 @@ class CliFormatter
         }
 
         // Indexes
-        if (!empty($diff['indexes'])) {
+        if (! empty($diff['indexes'])) {
             $output[] = "\n🔍 INDEXES:";
             foreach ($diff['indexes'] as $indexDiff) {
                 $output[] = $this->formatDiffItem($indexDiff, 'index');
@@ -154,7 +152,7 @@ class CliFormatter
         }
 
         // Foreign Keys
-        if (!empty($diff['foreign_keys'])) {
+        if (! empty($diff['foreign_keys'])) {
             $output[] = "\n🔗 FOREIGN KEYS:";
             foreach ($diff['foreign_keys'] as $fkDiff) {
                 $output[] = $this->formatDiffItem($fkDiff, 'foreign_key');
@@ -162,7 +160,7 @@ class CliFormatter
         }
 
         // Engine
-        if (!empty($diff['engine'])) {
+        if (! empty($diff['engine'])) {
             $output[] = "\n⚙️  ENGINE:";
             foreach ($diff['engine'] as $engineDiff) {
                 $output[] = $this->formatDiffItem($engineDiff, 'engine');
@@ -170,7 +168,7 @@ class CliFormatter
         }
 
         // Charset
-        if (!empty($diff['charset'])) {
+        if (! empty($diff['charset'])) {
             $output[] = "\n🔤 CHARSET:";
             foreach ($diff['charset'] as $charsetDiff) {
                 $output[] = $this->formatDiffItem($charsetDiff, 'charset');
@@ -178,7 +176,7 @@ class CliFormatter
         }
 
         // Collation
-        if (!empty($diff['collation'])) {
+        if (! empty($diff['collation'])) {
             $output[] = "\n🔤 COLLATION:";
             foreach ($diff['collation'] as $collationDiff) {
                 $output[] = $this->formatDiffItem($collationDiff, 'collation');
@@ -224,11 +222,12 @@ class CliFormatter
      */
     protected function formatRollback(array $rollback): string
     {
-        $output = ["🔄 ROLLBACK SIMULATION"];
-        $output[] = str_repeat("─", 60);
+        $output = ['🔄 ROLLBACK SIMULATION'];
+        $output[] = str_repeat('─', 60);
 
-        if (!$rollback['has_rollback']) {
-            $output[] = "  No rollback method defined";
+        if (! $rollback['has_rollback']) {
+            $output[] = '  No rollback method defined';
+
             return implode("\n", $output);
         }
 
@@ -236,30 +235,30 @@ class CliFormatter
         $risk = strtoupper($impact['risk_level'] ?? 'low');
 
         $output[] = "  Risk Level: {$risk}";
-        $output[] = "";
+        $output[] = '';
 
-        if (!empty($impact['tables_affected'])) {
-            $output[] = "  Tables Affected: " . implode(', ', array_filter($impact['tables_affected']));
+        if (! empty($impact['tables_affected'])) {
+            $output[] = '  Tables Affected: '.implode(', ', array_filter($impact['tables_affected']));
         }
 
-        if (!empty($impact['columns_affected'])) {
+        if (! empty($impact['columns_affected'])) {
             $cols = array_map(function ($col) {
-                return ($col['table'] ?? '') . '.' . ($col['column'] ?? '');
+                return ($col['table'] ?? '').'.'.($col['column'] ?? '');
             }, $impact['columns_affected']);
-            $output[] = "  Columns Affected: " . implode(', ', $cols);
+            $output[] = '  Columns Affected: '.implode(', ', $cols);
         }
 
-        if (!empty($rollback['dependencies'])) {
-            $output[] = "";
-            $output[] = "  ⚠️  Dependency Warnings:";
+        if (! empty($rollback['dependencies'])) {
+            $output[] = '';
+            $output[] = '  ⚠️  Dependency Warnings:';
             foreach ($rollback['dependencies'] as $dep) {
                 $output[] = "    - [{$dep['risk']}] {$dep['message']}";
             }
         }
 
-        if (!empty($rollback['sql_preview'])) {
-            $output[] = "";
-            $output[] = "  SQL Preview:";
+        if (! empty($rollback['sql_preview'])) {
+            $output[] = '';
+            $output[] = '  SQL Preview:';
             foreach ($rollback['sql_preview'] as $sql) {
                 $output[] = "    Line {$sql['line']}: {$sql['sql']}";
             }
@@ -273,15 +272,15 @@ class CliFormatter
      */
     protected function formatExports(array $exports): string
     {
-        $output = ["💾 DATA EXPORTS"];
-        $output[] = str_repeat("─", 60);
+        $output = ['💾 DATA EXPORTS'];
+        $output[] = str_repeat('─', 60);
 
         foreach ($exports as $export) {
-            $output[] = "";
+            $output[] = '';
             $output[] = "  Table: {$export['table']}";
             $output[] = "  Export Path: {$export['export_path']}";
             $output[] = "  Version: {$export['version']}";
-            $output[] = "  Files:";
+            $output[] = '  Files:';
             foreach ($export['files'] as $type => $path) {
                 if ($path) {
                     $output[] = "    - {$type}: {$path}";
@@ -292,4 +291,3 @@ class CliFormatter
         return implode("\n", $output);
     }
 }
-

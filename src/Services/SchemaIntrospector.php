@@ -2,8 +2,8 @@
 
 namespace Zaeem2396\SchemaLens\Services;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SchemaIntrospector
 {
@@ -79,6 +79,7 @@ class SchemaIntrospector
             ->groupBy('INDEX_NAME')
             ->map(function ($indexGroup) {
                 $first = $indexGroup->first();
+
                 return [
                     'name' => $first->INDEX_NAME,
                     'columns' => $indexGroup->pluck('COLUMN_NAME')->toArray(),
@@ -115,6 +116,7 @@ class SchemaIntrospector
             ->groupBy('CONSTRAINT_NAME')
             ->map(function ($constraintGroup) {
                 $first = $constraintGroup->first();
+
                 return [
                     'name' => $first->CONSTRAINT_NAME,
                     'columns' => $constraintGroup->pluck('COLUMN_NAME')->toArray(),

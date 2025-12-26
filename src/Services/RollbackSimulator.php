@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class RollbackSimulator
 {
     protected SchemaIntrospector $introspector;
+
     protected MigrationParser $parser;
 
     public function __construct(SchemaIntrospector $introspector, MigrationParser $parser)
@@ -68,7 +69,7 @@ class RollbackSimulator
                     'table' => $data['table'] ?? null,
                     'name' => $data['name'] ?? null,
                     'risk' => 'medium',
-                    'message' => "Dropping foreign key may break referential integrity",
+                    'message' => 'Dropping foreign key may break referential integrity',
                 ];
             }
 
@@ -79,7 +80,7 @@ class RollbackSimulator
                     'table' => $data['table'] ?? null,
                     'name' => $data['name'] ?? null,
                     'risk' => 'low',
-                    'message' => "Dropping index may affect query performance",
+                    'message' => 'Dropping index may affect query performance',
                 ];
             }
 
@@ -90,20 +91,20 @@ class RollbackSimulator
                     'table' => $data['table'] ?? null,
                     'column' => $data['column'] ?? null,
                     'risk' => 'high',
-                    'message' => "Dropping column may break dependent database objects",
+                    'message' => 'Dropping column may break dependent database objects',
                 ];
             }
 
             if ($type === 'table' && $action === 'drop') {
                 // Dropping table will break all foreign keys referencing it
                 $referencingTables = $this->findReferencingTables($data['table'] ?? '');
-                if (!empty($referencingTables)) {
+                if (! empty($referencingTables)) {
                     $dependencies[] = [
                         'type' => 'table_drop',
                         'table' => $data['table'] ?? null,
                         'referencing_tables' => $referencingTables,
                         'risk' => 'critical',
-                        'message' => "Dropping table will break foreign keys in: " . implode(', ', $referencingTables),
+                        'message' => 'Dropping table will break foreign keys in: '.implode(', ', $referencingTables),
                     ];
                 }
             }
@@ -117,14 +118,14 @@ class RollbackSimulator
      */
     protected function findReferencingTables(string $tableName): array
     {
-        if (!$this->introspector->tableExists($tableName)) {
+        if (! $this->introspector->tableExists($tableName)) {
             return [];
         }
 
         $referencing = DB::table('information_schema.key_column_usage as kcu')
             ->join('information_schema.referential_constraints as rc', function ($join) {
                 $join->on('kcu.constraint_name', '=', 'rc.constraint_name')
-                     ->on('kcu.table_schema', '=', 'rc.constraint_schema');
+                    ->on('kcu.table_schema', '=', 'rc.constraint_schema');
             })
             ->where('kcu.referenced_table_schema', DB::connection()->getDatabaseName())
             ->where('kcu.referenced_table_name', $tableName)
@@ -185,6 +186,7 @@ class RollbackSimulator
             case 'index':
                 if ($action === 'drop') {
                     $indexName = $data['name'] ?? '';
+
                     return "ALTER TABLE `{$data['table']}` DROP INDEX `{$indexName}`;";
                 }
                 break;
@@ -192,6 +194,7 @@ class RollbackSimulator
             case 'foreign_key':
                 if ($action === 'drop') {
                     $fkName = $data['name'] ?? '';
+
                     return "ALTER TABLE `{$data['table']}` DROP FOREIGN KEY `{$fkName}`;";
                 }
                 break;
@@ -254,4 +257,3 @@ class RollbackSimulator
         return $impact;
     }
 }
-

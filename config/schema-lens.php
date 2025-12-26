@@ -40,4 +40,3 @@ return [
         'show_line_numbers' => env('SCHEMA_LENS_SHOW_LINE_NUMBERS', true),
     ],
 ];
-
