@@ -6,6 +6,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 
 - 🔍 **Schema Diff Analysis**: Compare migration operations against current MySQL schema
 - ⚠️ **Destructive Change Detection**: Automatically flags dangerous operations
+- 🔄 **Interactive Mode**: Step-by-step confirmation for destructive changes
 - 💾 **Automatic Data Export**: Exports affected data to CSV/JSON when destructive changes are detected
 - 🔄 **Rollback Simulation**: Preview rollback impact and SQL statements
 - 📊 **Line-by-Line Mapping**: Maps each database change back to exact lines in migration file
@@ -105,12 +106,45 @@ php artisan migrate:safe
 - `--step` - Run migrations one at a time
 - `--pretend` - Dump the SQL queries that would be run
 - `--no-backup` - Skip data backup for destructive changes
+- `--interactive` - Confirm each destructive change individually
 
 This command:
 1. Analyzes all pending migrations for destructive changes
 2. Automatically backs up affected data before proceeding
 3. Asks for confirmation if destructive changes are detected
 4. Runs the actual migration
+
+### Interactive Mode
+
+For granular control over destructive migrations, use interactive mode:
+
+```bash
+php artisan migrate:safe --interactive
+```
+
+This prompts you to review each migration with destructive changes individually:
+
+```
+📋 Migration: 2024_01_15_drop_email_column.php
+   Destructive changes:
+   🔴 [CRITICAL] column::drop
+      Tables: users
+      Columns: users.email
+
+   Approve '2024_01_15_drop_email_column.php'? [y/n/a/s/q] 
+```
+
+**Options during review:**
+
+| Key | Action |
+|-----|--------|
+| `y` | Approve this migration |
+| `n` | Skip this migration |
+| `a` | Approve all remaining migrations |
+| `s` | Skip all remaining migrations |
+| `q` | Quit and cancel everything |
+
+Only approved migrations will be executed, giving you full control over which destructive changes to apply.
 
 ## What It Detects
 
