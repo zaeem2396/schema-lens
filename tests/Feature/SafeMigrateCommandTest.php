@@ -170,4 +170,144 @@ class SafeMigrateCommandTest extends TestCase
             ->assertSuccessful()
             ->expectsOutputToContain('Nothing to migrate');
     }
+
+    // ====================================
+    // Single Migration File Tests
+    // ====================================
+
+    /** @test */
+    public function command_accepts_path_argument(): void
+    {
+        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $definition = $command->getDefinition();
+
+        $this->assertTrue($definition->hasArgument('path'));
+    }
+
+    /** @test */
+    public function path_argument_is_optional(): void
+    {
+        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $definition = $command->getDefinition();
+        $argument = $definition->getArgument('path');
+
+        $this->assertFalse($argument->isRequired());
+    }
+
+    /** @test */
+    public function path_argument_has_correct_description(): void
+    {
+        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $definition = $command->getDefinition();
+        $argument = $definition->getArgument('path');
+
+        $this->assertNotEmpty($argument->getDescription());
+        $this->assertStringContainsString('migration', strtolower($argument->getDescription()));
+    }
+
+    /** @test */
+    public function single_migration_fails_for_nonexistent_file(): void
+    {
+        $this->skipIfNotMySQL();
+
+        $this->artisan('migrate:safe', ['path' => 'database/migrations/nonexistent_file.php'])
+            ->assertFailed()
+            ->expectsOutputToContain('Migration file not found');
+    }
+
+    /** @test */
+    public function single_migration_fails_for_non_php_file(): void
+    {
+        $this->skipIfNotMySQL();
+
+        // Create a temporary non-PHP file
+        $tempFile = base_path('database/migrations/test_file.txt');
+        file_put_contents($tempFile, 'test content');
+
+        try {
+            $this->artisan('migrate:safe', ['path' => 'database/migrations/test_file.txt'])
+                ->assertFailed()
+                ->expectsOutputToContain('Invalid migration file');
+        } finally {
+            // Cleanup
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
+
+    /** @test */
+    public function single_migration_shows_single_mode_message(): void
+    {
+        $this->skipIfNotMySQL();
+
+        // Create a temporary migration file
+        $timestamp = date('Y_m_d_His');
+        $migrationName = "{$timestamp}_test_single_migration";
+        $tempFile = base_path("database/migrations/{$migrationName}.php");
+
+        $migrationContent = <<<'PHP'
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('test_single_table', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('test_single_table');
+    }
+};
+PHP;
+
+        file_put_contents($tempFile, $migrationContent);
+
+        try {
+            $this->artisan('migrate:safe', ['path' => "database/migrations/{$migrationName}.php"])
+                ->expectsOutputToContain('Single migration mode');
+        } finally {
+            // Cleanup
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+            // Also drop table if it was created
+            try {
+                $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('test_single_table');
+            } catch (\Exception $e) {
+                // Ignore
+            }
+        }
+    }
+
+    /** @test */
+    public function single_migration_can_use_interactive_option(): void
+    {
+        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $definition = $command->getDefinition();
+
+        // Both path argument and interactive option should be available
+        $this->assertTrue($definition->hasArgument('path'));
+        $this->assertTrue($definition->hasOption('interactive'));
+    }
+
+    /** @test */
+    public function single_migration_can_use_no_backup_option(): void
+    {
+        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $definition = $command->getDefinition();
+
+        // Both path argument and no-backup option should be available
+        $this->assertTrue($definition->hasArgument('path'));
+        $this->assertTrue($definition->hasOption('no-backup'));
+    }
 }

@@ -12,6 +12,7 @@ use Zaeem2396\SchemaLens\Services\SchemaIntrospector;
 class SafeMigrateCommand extends Command
 {
     protected $signature = 'migrate:safe 
+                            {path? : Path to a specific migration file to run}
                             {--force : Force the operation to run in production}
                             {--seed : Run seeders after migration}
                             {--step : Run migrations one at a time}
@@ -48,8 +49,18 @@ class SafeMigrateCommand extends Command
         $this->info('================================');
         $this->newLine();
 
-        // Get pending migrations
-        $pendingMigrations = $this->getPendingMigrations();
+        // Check if a specific migration file is provided
+        $specificMigration = $this->argument('path');
+
+        if ($specificMigration) {
+            $pendingMigrations = $this->resolveSingleMigration($specificMigration);
+
+            if ($pendingMigrations === null) {
+                return Command::FAILURE;
+            }
+        } else {
+            $pendingMigrations = $this->getPendingMigrations();
+        }
 
         if (empty($pendingMigrations)) {
             $this->info('✅ Nothing to migrate.');
@@ -162,8 +173,11 @@ class SafeMigrateCommand extends Command
         // Filter out false/null options
         $options = array_filter($options);
 
-        // In interactive mode with partial approval, run migrations individually
-        if ($this->option('interactive') && ! empty($allDestructiveChanges)) {
+        // Use selective migrations for: single file mode, or interactive mode with partial approval
+        $useSingleFileMode = $this->argument('path') !== null;
+        $useSelectiveMigrations = $useSingleFileMode || ($this->option('interactive') && ! empty($allDestructiveChanges));
+
+        if ($useSelectiveMigrations) {
             $exitCode = $this->runSelectiveMigrations($pendingMigrations, $options);
         } else {
             $exitCode = $this->call('migrate', $options);
@@ -406,55 +420,119 @@ class SafeMigrateCommand extends Command
      */
     protected function runSelectiveMigrations(array $migrationFiles, array $options): int
     {
-        $migrator = app('migrator');
-        $allFiles = $migrator->getMigrationFiles(database_path('migrations'));
-
-        // Get migration names from paths
-        $approvedNames = [];
-        foreach ($migrationFiles as $path) {
-            foreach ($allFiles as $name => $filePath) {
-                if ($filePath === $path) {
-                    $approvedNames[] = $name;
-                    break;
-                }
-            }
-        }
-
-        if (empty($approvedNames)) {
-            $this->warn('No migrations to run.');
-
-            return Command::SUCCESS;
-        }
-
-        // Run each approved migration
         $exitCode = Command::SUCCESS;
-        foreach ($approvedNames as $migrationName) {
+
+        foreach ($migrationFiles as $path) {
+            $migrationName = $this->getMigrationName($path);
             $this->line("  Running: {$migrationName}");
 
             try {
+                // Get the relative path from database/migrations
+                $relativePath = $this->getRelativeMigrationPath($path);
+
                 $result = $this->call('migrate', array_merge($options, [
-                    '--path' => 'database/migrations',
-                    '--realpath' => false,
+                    '--path' => $relativePath,
                 ]));
 
                 if ($result !== 0) {
                     $exitCode = $result;
+                    break; // Stop on first error
                 }
             } catch (\Exception $e) {
                 $this->error("  Error running {$migrationName}: ".$e->getMessage());
                 $exitCode = Command::FAILURE;
+                break;
             }
-
-            // Only run one migration then break - Laravel's migrate handles batch
-            break;
-        }
-
-        // If step mode, continue with remaining
-        if ($this->option('step') && count($approvedNames) > 1) {
-            // Re-run to get remaining pending
-            return $this->call('migrate', $options);
         }
 
         return $exitCode;
+    }
+
+    /**
+     * Get relative migration path for Laravel's migrate command.
+     */
+    protected function getRelativeMigrationPath(string $absolutePath): string
+    {
+        $basePath = base_path();
+
+        // If the path starts with base_path, make it relative
+        if (str_starts_with($absolutePath, $basePath)) {
+            return ltrim(str_replace($basePath, '', $absolutePath), DIRECTORY_SEPARATOR);
+        }
+
+        // If it's an absolute path outside the project, use realpath flag
+        return $absolutePath;
+    }
+
+    /**
+     * Resolve and validate a single migration file path.
+     *
+     * @param  string  $path  The migration file path (relative or absolute)
+     * @return array|null Array with single migration path, or null on failure
+     */
+    protected function resolveSingleMigration(string $path): ?array
+    {
+        // Resolve to absolute path
+        $absolutePath = $this->resolveAbsolutePath($path);
+
+        // Check if file exists
+        if (! file_exists($absolutePath)) {
+            $this->error("❌ Migration file not found: {$path}");
+            $this->line('');
+            $this->line('  Make sure the path is correct. Examples:');
+            $this->line('  - database/migrations/2024_01_15_create_posts_table.php');
+            $this->line('  - /var/www/app/database/migrations/2024_01_15_create_posts_table.php');
+
+            return null;
+        }
+
+        // Verify it's a PHP file
+        if (pathinfo($absolutePath, PATHINFO_EXTENSION) !== 'php') {
+            $this->error("❌ Invalid migration file: {$path}");
+            $this->line('  Migration files must have a .php extension.');
+
+            return null;
+        }
+
+        // Check if this migration is pending (not already run)
+        $migrator = app('migrator');
+        $ran = $migrator->getRepository()->getRan();
+        $migrationName = $this->getMigrationName($absolutePath);
+
+        if (in_array($migrationName, $ran)) {
+            $this->warn("⚠️  Migration already executed: {$migrationName}");
+            $this->line('');
+            $this->line('  This migration has already been run.');
+            $this->line('  Use `php artisan migrate:rollback` to undo it first if needed.');
+
+            return null;
+        }
+
+        $this->info("📄 Single migration mode: {$migrationName}");
+        $this->newLine();
+
+        return [$absolutePath];
+    }
+
+    /**
+     * Resolve a path to an absolute path.
+     */
+    protected function resolveAbsolutePath(string $path): string
+    {
+        // If already absolute, return as-is
+        if (str_starts_with($path, '/') || preg_match('/^[A-Za-z]:/', $path)) {
+            return $path;
+        }
+
+        // Resolve relative to base path
+        return base_path($path);
+    }
+
+    /**
+     * Extract migration name from file path.
+     */
+    protected function getMigrationName(string $path): string
+    {
+        return str_replace('.php', '', basename($path));
     }
 }
