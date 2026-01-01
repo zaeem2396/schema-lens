@@ -7,6 +7,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - 🔍 **Schema Diff Analysis**: Compare migration operations against current MySQL schema
 - ⚠️ **Destructive Change Detection**: Automatically flags dangerous operations
 - 🔄 **Interactive Mode**: Step-by-step confirmation for destructive changes
+- 📄 **Single Migration Support**: Run a specific migration file with full analysis
 - 💾 **Automatic Data Export**: Exports affected data to CSV/JSON when destructive changes are detected
 - 🔄 **Rollback Simulation**: Preview rollback impact and SQL statements
 - 📊 **Line-by-Line Mapping**: Maps each database change back to exact lines in migration file
@@ -100,6 +101,9 @@ Run migrations with automatic destructive change detection and data backup:
 php artisan migrate:safe
 ```
 
+**Arguments:**
+- `path` - (Optional) Path to a specific migration file to run
+
 **Options:**
 - `--force` - Force the operation to run in production
 - `--seed` - Run seeders after migration
@@ -113,6 +117,41 @@ This command:
 2. Automatically backs up affected data before proceeding
 3. Asks for confirmation if destructive changes are detected
 4. Runs the actual migration
+
+### Single Migration File
+
+Run a specific migration file instead of all pending migrations:
+
+```bash
+# Using relative path
+php artisan migrate:safe database/migrations/2024_01_15_drop_column.php
+
+# Using absolute path
+php artisan migrate:safe /var/www/app/database/migrations/2024_01_15_drop_column.php
+```
+
+This is useful when you:
+- Want to analyze and run just one migration
+- Need fine-grained control over which migration to execute
+- Are testing a specific migration before deploying
+
+You can combine it with other options:
+
+```bash
+# Single file with interactive mode
+php artisan migrate:safe database/migrations/2024_01_15_drop_column.php --interactive
+
+# Single file without backup
+php artisan migrate:safe database/migrations/2024_01_15_drop_column.php --no-backup
+
+# Single file with pretend mode (just show SQL)
+php artisan migrate:safe database/migrations/2024_01_15_drop_column.php --pretend
+```
+
+The command validates that:
+- The file exists
+- It has a `.php` extension
+- It hasn't already been executed
 
 ### Interactive Mode
 
