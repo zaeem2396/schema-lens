@@ -12,6 +12,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - 🔄 **Rollback Simulation**: Preview rollback impact and SQL statements
 - 📊 **Line-by-Line Mapping**: Maps each database change back to exact lines in migration file
 - 🎨 **Clean CLI Output**: Human-readable formatted output
+- 📄 **SQL Preview**: Generate raw SQL statements from migrations
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
 - 📦 **Versioning**: Automatic versioning of exports with restore metadata
@@ -74,6 +75,45 @@ Or use a relative path from the migrations directory:
 ```bash
 php artisan schema:preview 2024_01_01_000000_create_users_table.php
 ```
+
+### SQL Preview
+
+Generate raw SQL statements that would be executed:
+
+```bash
+# Display SQL in terminal
+php artisan schema:preview database/migrations/2024_01_01_000000_create_users_table.php --sql
+
+# Save SQL to file
+php artisan schema:preview database/migrations/2024_01_01_000000_create_users_table.php --sql --output=migration.sql
+
+# Or use format option
+php artisan schema:preview database/migrations/2024_01_01_000000_create_users_table.php --format=sql
+```
+
+**Example output:**
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║               📄 GENERATED SQL STATEMENTS                    ║
+╚══════════════════════════════════════════════════════════════╝
+
+🟢 [1] table::create
+CREATE TABLE `users` (...) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+🟢 [2] column::add
+ALTER TABLE `users` ADD COLUMN `name` VARCHAR(255);
+
+─────────────────────────────────────────────────────────────────
+📊 Summary:
+   Total statements: 2
+   Operations: 🟢 1 create, 🟢 1 add
+```
+
+When using `--output`, the SQL file includes:
+- Header comments with migration name and timestamp
+- `SET FOREIGN_KEY_CHECKS=0/1` wrappers
+- Operation comments for each statement
 
 ### JSON Output
 

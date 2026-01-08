@@ -286,4 +286,225 @@ class PreviewMigrationCommandTest extends TestCase
         // Cleanup
         File::deleteDirectory($customPath);
     }
+
+    // ========================================
+    // SQL FORMAT TESTS
+    // ========================================
+
+    /** @test */
+    public function it_has_sql_option(): void
+    {
+        $command = $this->app->make(\Illuminate\Contracts\Console\Kernel::class)
+            ->all()['schema:preview'];
+
+        $definition = $command->getDefinition();
+
+        $this->assertTrue($definition->hasOption('sql'));
+        $this->assertFalse($definition->getOption('sql')->acceptValue());
+    }
+
+    /** @test */
+    public function it_has_output_option(): void
+    {
+        $command = $this->app->make(\Illuminate\Contracts\Console\Kernel::class)
+            ->all()['schema:preview'];
+
+        $definition = $command->getDefinition();
+
+        $this->assertTrue($definition->hasOption('output'));
+        $this->assertTrue($definition->getOption('output')->acceptValue());
+    }
+
+    /** @test */
+    public function it_can_generate_sql_output(): void
+    {
+        // This test doesn't require MySQL as SQL generation is based on parsed operations
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_01_000000_create_users_table.php'),
+            '--sql' => true,
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('SQL');
+    }
+
+    /** @test */
+    public function sql_output_contains_create_table(): void
+    {
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_01_000000_create_users_table.php'),
+            '--sql' => true,
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('CREATE TABLE');
+    }
+
+    /** @test */
+    public function sql_output_contains_alter_table_for_column_changes(): void
+    {
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'),
+            '--sql' => true,
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('ALTER TABLE');
+    }
+
+    /** @test */
+    public function sql_output_contains_drop_column(): void
+    {
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_03_000000_drop_columns_from_users.php'),
+            '--sql' => true,
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('DROP COLUMN');
+    }
+
+    /** @test */
+    public function sql_output_contains_drop_table(): void
+    {
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_05_000000_drop_users_table.php'),
+            '--sql' => true,
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('DROP TABLE');
+    }
+
+    /** @test */
+    public function sql_output_shows_summary(): void
+    {
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_02_000000_add_columns_to_users.php'),
+            '--sql' => true,
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('Summary');
+    }
+
+    /** @test */
+    public function it_can_save_sql_to_file(): void
+    {
+        $outputPath = storage_path('app/schema-lens/test-output.sql');
+
+        // Clean up any previous file
+        if (File::exists($outputPath)) {
+            File::delete($outputPath);
+        }
+
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_01_000000_create_users_table.php'),
+            '--sql' => true,
+            '--output' => $outputPath,
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('SQL script saved');
+
+        $this->assertFileExists($outputPath);
+
+        $content = File::get($outputPath);
+        $this->assertStringContainsString('CREATE TABLE', $content);
+        $this->assertStringContainsString('-- Migration:', $content);
+        $this->assertStringContainsString('SET FOREIGN_KEY_CHECKS', $content);
+
+        // Cleanup
+        File::delete($outputPath);
+    }
+
+    /** @test */
+    public function it_can_save_sql_to_directory(): void
+    {
+        $outputDir = storage_path('app/schema-lens/sql-output');
+        File::ensureDirectoryExists($outputDir);
+
+        // Clean up any previous files
+        $expectedFile = $outputDir.'/2024_01_01_000000_create_users_table.sql';
+        if (File::exists($expectedFile)) {
+            File::delete($expectedFile);
+        }
+
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_01_000000_create_users_table.php'),
+            '--sql' => true,
+            '--output' => $outputDir,
+        ])
+            ->assertSuccessful();
+
+        $this->assertFileExists($expectedFile);
+
+        // Cleanup
+        File::deleteDirectory($outputDir);
+    }
+
+    /** @test */
+    public function sql_file_contains_header_comments(): void
+    {
+        $outputPath = storage_path('app/schema-lens/header-test.sql');
+
+        if (File::exists($outputPath)) {
+            File::delete($outputPath);
+        }
+
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_01_000000_create_users_table.php'),
+            '--sql' => true,
+            '--output' => $outputPath,
+        ])->assertSuccessful();
+
+        $content = File::get($outputPath);
+
+        $this->assertStringContainsString('-- Migration:', $content);
+        $this->assertStringContainsString('-- Generated by Schema Lens', $content);
+        $this->assertStringContainsString('-- Date:', $content);
+        $this->assertStringContainsString('-- End of migration', $content);
+
+        // Cleanup
+        File::delete($outputPath);
+    }
+
+    /** @test */
+    public function sql_output_handles_empty_migration(): void
+    {
+        // Create a temporary empty migration file
+        $tempMigration = $this->getFixturePath('temp_empty_migration.php');
+        File::put($tempMigration, <<<'PHP'
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Empty migration
+    }
+
+    public function down(): void
+    {
+        // Empty migration
+    }
+};
+PHP);
+
+        $this->artisan('schema:preview', [
+            'migration' => $tempMigration,
+            '--sql' => true,
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('No SQL statements');
+
+        // Cleanup
+        File::delete($tempMigration);
+    }
+
+    /** @test */
+    public function sql_format_can_be_set_via_format_option(): void
+    {
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_01_000000_create_users_table.php'),
+            '--format' => 'sql',
+        ])
+            ->assertSuccessful()
+            ->expectsOutputToContain('SQL');
+    }
 }
