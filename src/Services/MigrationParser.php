@@ -128,7 +128,7 @@ class MigrationParser
                 }
             }
 
-            // Column operations
+            // Column operations - standard column types with name parameter
             if ($currentTable && preg_match('/->(string|integer|bigInteger|text|boolean|date|datetime|timestamp|decimal|float|double|enum|json|binary|char|tinyInteger|smallInteger|mediumInteger|unsignedInteger|unsignedBigInteger|unsignedTinyInteger|unsignedSmallInteger|unsignedMediumInteger|longText|mediumText|tinyText|jsonb|uuid|ipAddress|macAddress|geometry|point|lineString|polygon|geometryCollection|multiPoint|multiLineString|multiPolygon|multiPolygonZ)\s*\(/', $trimmed, $matches)) {
                 $columnType = $matches[1];
                 $columnName = $this->extractColumnName($trimmed);
@@ -138,6 +138,87 @@ class MigrationParser
                         'table' => $currentTable,
                         'column' => $columnName,
                         'type' => $columnType,
+                        'definition' => $trimmed,
+                    ], $lineNumber, $direction);
+                }
+            }
+
+            // Common Laravel column helpers (no explicit column name parameter)
+            if ($currentTable) {
+                // id() - auto-incrementing big integer primary key
+                if (preg_match('/->id\s*\(\s*\)/', $trimmed) || preg_match('/->id\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/', $trimmed, $idMatches)) {
+                    $columnName = $idMatches[1] ?? 'id';
+                    $this->addOperation('column', 'add', [
+                        'table' => $currentTable,
+                        'column' => $columnName,
+                        'type' => 'bigIncrements',
+                        'definition' => $trimmed,
+                    ], $lineNumber, $direction);
+                }
+
+                // bigIncrements / increments
+                if (preg_match('/->(bigIncrements|increments|tinyIncrements|smallIncrements|mediumIncrements)\s*\(\s*[\'"]?([^\'")\s]+)?[\'"]?\s*\)/', $trimmed, $incMatches)) {
+                    $columnName = $incMatches[2] ?? 'id';
+                    $this->addOperation('column', 'add', [
+                        'table' => $currentTable,
+                        'column' => $columnName,
+                        'type' => $incMatches[1],
+                        'definition' => $trimmed,
+                    ], $lineNumber, $direction);
+                }
+
+                // timestamps() / nullableTimestamps() / timestampsTz()
+                if (preg_match('/->(timestamps|nullableTimestamps|timestampsTz|nullableTimestampsTz)\s*\(/', $trimmed)) {
+                    $this->addOperation('column', 'add', [
+                        'table' => $currentTable,
+                        'column' => 'created_at',
+                        'type' => 'timestamp',
+                        'definition' => $trimmed,
+                    ], $lineNumber, $direction);
+                    $this->addOperation('column', 'add', [
+                        'table' => $currentTable,
+                        'column' => 'updated_at',
+                        'type' => 'timestamp',
+                        'definition' => $trimmed,
+                    ], $lineNumber, $direction);
+                }
+
+                // softDeletes() / softDeletesTz()
+                if (preg_match('/->(softDeletes|softDeletesTz)\s*\(\s*[\'"]?([^\'")\s]*)?[\'"]?\s*\)/', $trimmed, $sdMatches)) {
+                    $columnName = ! empty($sdMatches[2]) ? $sdMatches[2] : 'deleted_at';
+                    $this->addOperation('column', 'add', [
+                        'table' => $currentTable,
+                        'column' => $columnName,
+                        'type' => 'timestamp',
+                        'definition' => $trimmed,
+                    ], $lineNumber, $direction);
+                }
+
+                // rememberToken()
+                if (preg_match('/->rememberToken\s*\(/', $trimmed)) {
+                    $this->addOperation('column', 'add', [
+                        'table' => $currentTable,
+                        'column' => 'remember_token',
+                        'type' => 'string',
+                        'definition' => $trimmed,
+                    ], $lineNumber, $direction);
+                }
+
+                // morphs() / nullableMorphs() / uuidMorphs() / nullableUuidMorphs()
+                if (preg_match('/->(morphs|nullableMorphs|uuidMorphs|nullableUuidMorphs)\s*\(\s*[\'"]([^\'"]+)[\'"]/', $trimmed, $morphMatches)) {
+                    $morphName = $morphMatches[2];
+                    $morphType = $morphMatches[1];
+                    // morphs creates {name}_type and {name}_id columns
+                    $this->addOperation('column', 'add', [
+                        'table' => $currentTable,
+                        'column' => $morphName.'_type',
+                        'type' => 'string',
+                        'definition' => $trimmed,
+                    ], $lineNumber, $direction);
+                    $this->addOperation('column', 'add', [
+                        'table' => $currentTable,
+                        'column' => $morphName.'_id',
+                        'type' => str_contains($morphType, 'uuid') ? 'uuid' : 'unsignedBigInteger',
                         'definition' => $trimmed,
                     ], $lineNumber, $direction);
                 }
@@ -201,23 +282,62 @@ class MigrationParser
             if ($currentTable && preg_match('/->(foreign|foreignId)\s*\(/', $trimmed)) {
                 $columns = $this->extractArrayArgument($trimmed);
                 $column = $this->extractStringArgument($trimmed);
+                $isForeignId = strpos($trimmed, '->foreignId') !== false;
 
-                // Try to find references() call on next lines
-                $referencesLine = $this->findReferencesLine($lines, $localIndex);
-                if ($referencesLine) {
-                    $referencedTable = $this->extractReferencedTable($referencesLine);
-                    $referencedColumn = $this->extractReferencedColumn($referencesLine);
-                    $onUpdate = $this->extractOnUpdate($referencesLine);
-                    $onDelete = $this->extractOnDelete($referencesLine);
+                // Check for constrained() on the same line or nearby lines (for foreignId shorthand)
+                $constrainedInfo = $this->extractConstrainedInfo($trimmed, $lines, $localIndex);
+
+                if ($constrainedInfo) {
+                    // foreignId()->constrained() shorthand syntax
+                    $referencedTable = $constrainedInfo['table'];
+                    $referencedColumn = $constrainedInfo['column'] ?? 'id';
+                    $onUpdate = $constrainedInfo['on_update'];
+                    $onDelete = $constrainedInfo['on_delete'];
+
+                    // Also add the column itself for foreignId
+                    if ($isForeignId && $column) {
+                        $this->addOperation('column', 'add', [
+                            'table' => $currentTable,
+                            'column' => $column,
+                            'type' => 'unsignedBigInteger',
+                            'definition' => $trimmed,
+                        ], $lineNumber, $direction);
+                    }
 
                     $this->addOperation('foreign_key', 'add', [
                         'table' => $currentTable,
                         'columns' => $column ? [$column] : $columns,
                         'referenced_table' => $referencedTable,
-                        'referenced_columns' => $referencedColumn ? [$referencedColumn] : null,
+                        'referenced_columns' => [$referencedColumn],
                         'on_update' => $onUpdate,
                         'on_delete' => $onDelete,
                     ], $lineNumber, $direction);
+                } else {
+                    // Try to find references() call on next lines (traditional syntax)
+                    $referencesLine = $this->findReferencesLine($lines, $localIndex);
+                    if ($referencesLine) {
+                        $referencedTable = $this->extractReferencedTable($referencesLine);
+                        $referencedColumn = $this->extractReferencedColumn($referencesLine);
+                        $onUpdate = $this->extractOnUpdate($referencesLine);
+                        $onDelete = $this->extractOnDelete($referencesLine);
+
+                        $this->addOperation('foreign_key', 'add', [
+                            'table' => $currentTable,
+                            'columns' => $column ? [$column] : $columns,
+                            'referenced_table' => $referencedTable,
+                            'referenced_columns' => $referencedColumn ? [$referencedColumn] : null,
+                            'on_update' => $onUpdate,
+                            'on_delete' => $onDelete,
+                        ], $lineNumber, $direction);
+                    } elseif ($isForeignId && $column) {
+                        // foreignId without constrained() - just add the column
+                        $this->addOperation('column', 'add', [
+                            'table' => $currentTable,
+                            'column' => $column,
+                            'type' => 'unsignedBigInteger',
+                            'definition' => $trimmed,
+                        ], $lineNumber, $direction);
+                    }
                 }
             }
 
@@ -321,6 +441,92 @@ class MigrationParser
     {
         if (preg_match('/->\w+\s*\([^,]+,\s*[\'"]([^\'"]+)[\'"]/', $line, $matches)) {
             return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract constrained() info for foreignId shorthand.
+     * Handles: ->constrained() and ->constrained('table_name')
+     *
+     * @return array|null Array with 'table', 'column', 'on_update', 'on_delete' or null if not found
+     */
+    protected function extractConstrainedInfo(string $currentLine, array $lines, int $currentIndex): ?array
+    {
+        // Combine current line and next few lines to handle multi-line chains
+        $combinedLines = $currentLine;
+        for ($i = $currentIndex + 1; $i < min($currentIndex + 5, count($lines)); $i++) {
+            $combinedLines .= ' '.$lines[$i];
+        }
+
+        // Check if constrained() exists
+        if (strpos($combinedLines, '->constrained') === false) {
+            return null;
+        }
+
+        // Extract the column name from foreignId('column_name')
+        $columnName = null;
+        if (preg_match('/->foreignId\s*\(\s*[\'"]([^\'"]+)[\'"]/', $combinedLines, $colMatch)) {
+            $columnName = $colMatch[1];
+        }
+
+        // Extract explicit table name from constrained('table_name')
+        $referencedTable = null;
+        if (preg_match('/->constrained\s*\(\s*[\'"]([^\'"]+)[\'"]/', $combinedLines, $tableMatch)) {
+            $referencedTable = $tableMatch[1];
+        } elseif ($columnName) {
+            // Infer table name from column name (user_id -> users)
+            $referencedTable = $this->inferTableFromColumn($columnName);
+        }
+
+        // Extract onUpdate and onDelete if present
+        $onUpdate = $this->extractOnUpdate($combinedLines);
+        $onDelete = $this->extractOnDelete($combinedLines);
+
+        // Also check for cascadeOnUpdate/cascadeOnDelete shortcuts
+        if (strpos($combinedLines, '->cascadeOnUpdate') !== false) {
+            $onUpdate = 'cascade';
+        }
+        if (strpos($combinedLines, '->cascadeOnDelete') !== false) {
+            $onDelete = 'cascade';
+        }
+        if (strpos($combinedLines, '->nullOnDelete') !== false) {
+            $onDelete = 'set null';
+        }
+        if (strpos($combinedLines, '->restrictOnDelete') !== false) {
+            $onDelete = 'restrict';
+        }
+        if (strpos($combinedLines, '->restrictOnUpdate') !== false) {
+            $onUpdate = 'restrict';
+        }
+
+        return [
+            'table' => $referencedTable,
+            'column' => 'id', // constrained() always references 'id' by default
+            'on_update' => $onUpdate,
+            'on_delete' => $onDelete,
+        ];
+    }
+
+    /**
+     * Infer referenced table name from column name.
+     * E.g., 'user_id' -> 'users', 'post_id' -> 'posts'
+     */
+    protected function inferTableFromColumn(string $columnName): ?string
+    {
+        // Remove _id suffix and pluralize
+        if (str_ends_with($columnName, '_id')) {
+            $singular = substr($columnName, 0, -3);
+
+            // Simple pluralization rules
+            if (str_ends_with($singular, 'y')) {
+                return substr($singular, 0, -1).'ies';
+            } elseif (str_ends_with($singular, 's') || str_ends_with($singular, 'x') || str_ends_with($singular, 'ch') || str_ends_with($singular, 'sh')) {
+                return $singular.'es';
+            } else {
+                return $singular.'s';
+            }
         }
 
         return null;

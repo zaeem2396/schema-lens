@@ -34,7 +34,7 @@ class SqlGeneratorTest extends TestCase
         $result = $this->generator->generate($operations);
 
         $this->assertCount(1, $result);
-        $this->assertStringContainsString('CREATE TABLE `posts`', $result[0]['sql']);
+        $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS `posts`', $result[0]['sql']);
         $this->assertStringContainsString('ENGINE=InnoDB', $result[0]['sql']);
         $this->assertStringContainsString('utf8mb4', $result[0]['sql']);
     }
@@ -54,7 +54,7 @@ class SqlGeneratorTest extends TestCase
         $result = $this->generator->generate($operations);
 
         $this->assertCount(1, $result);
-        $this->assertEquals('DROP TABLE `posts`;', $result[0]['sql']);
+        $this->assertEquals('DROP TABLE IF EXISTS `posts`;', $result[0]['sql']);
     }
 
     /** @test */
@@ -661,6 +661,7 @@ class SqlGeneratorTest extends TestCase
     /** @test */
     public function it_handles_multiple_operations(): void
     {
+        // When columns are part of a CREATE TABLE, they are combined into one statement
         $operations = collect([
             [
                 'type' => 'table',
@@ -684,7 +685,38 @@ class SqlGeneratorTest extends TestCase
 
         $result = $this->generator->generate($operations);
 
-        $this->assertCount(3, $result);
+        // Columns are now included in the CREATE TABLE statement, so only 1 result
+        $this->assertCount(1, $result);
+        $this->assertStringContainsString('CREATE TABLE', $result[0]['sql']);
+        $this->assertStringContainsString('title', $result[0]['sql']);
+        $this->assertStringContainsString('body', $result[0]['sql']);
+    }
+
+    /** @test */
+    public function it_handles_multiple_operations_on_different_tables(): void
+    {
+        // When adding columns to existing tables (not part of CREATE TABLE), separate statements are generated
+        $operations = collect([
+            [
+                'type' => 'column',
+                'action' => 'add',
+                'direction' => 'up',
+                'data' => ['table' => 'users', 'column' => 'nickname', 'type' => 'string'],
+            ],
+            [
+                'type' => 'column',
+                'action' => 'add',
+                'direction' => 'up',
+                'data' => ['table' => 'posts', 'column' => 'title', 'type' => 'string'],
+            ],
+        ]);
+
+        $result = $this->generator->generate($operations);
+
+        // Each column addition to an existing table gets its own ALTER TABLE statement
+        $this->assertCount(2, $result);
+        $this->assertStringContainsString('ALTER TABLE `users`', $result[0]['sql']);
+        $this->assertStringContainsString('ALTER TABLE `posts`', $result[1]['sql']);
     }
 
     /** @test */
@@ -719,13 +751,13 @@ class SqlGeneratorTest extends TestCase
                 'type' => 'column',
                 'action' => 'add',
                 'direction' => 'up',
-                'data' => [], // Missing table, column, type
+                'data' => ['table' => 'existing_table', 'column' => 'test', 'type' => 'string'],
             ],
         ]);
 
         $result = $this->generator->generate($operations);
 
-        // Should still generate SQL but with empty values
+        // Should generate ALTER TABLE SQL for column additions to existing tables
         $this->assertCount(1, $result);
         $this->assertStringContainsString('ALTER TABLE', $result[0]['sql']);
     }

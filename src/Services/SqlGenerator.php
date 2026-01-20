@@ -14,11 +14,20 @@ class SqlGenerator
 
     protected string $engine = 'InnoDB';
 
+    /**
+     * Track columns for CREATE TABLE statements.
+     *
+     * @var array<string, array<int, array<string, mixed>>>
+     */
+    protected array $tableColumns = [];
+
     public function __construct()
     {
-        $this->tablePrefix = config('database.connections.mysql.prefix', '');
-        $this->charset = config('database.connections.mysql.charset', 'utf8mb4');
-        $this->collation = config('database.connections.mysql.collation', 'utf8mb4_unicode_ci');
+        // Use the default database connection instead of hardcoding 'mysql'
+        $connection = config('database.default', 'mysql');
+        $this->tablePrefix = config("database.connections.{$connection}.prefix", '');
+        $this->charset = config("database.connections.{$connection}.charset", 'utf8mb4');
+        $this->collation = config("database.connections.{$connection}.collation", 'utf8mb4_unicode_ci');
     }
 
     /**
@@ -27,7 +36,27 @@ class SqlGenerator
     public function generate(Collection $operations): array
     {
         $statements = [];
+        $this->tableColumns = [];
 
+        // First pass: collect columns for each CREATE TABLE operation
+        foreach ($operations as $operation) {
+            $type = $operation['type'] ?? '';
+            $action = $operation['action'] ?? '';
+            $data = $operation['data'] ?? [];
+
+            if ($type === 'table' && $action === 'create') {
+                $tableName = $data['table'] ?? '';
+                $this->tableColumns[$tableName] = [];
+            } elseif ($type === 'column' && $action === 'add') {
+                $tableName = $data['table'] ?? '';
+                if (isset($this->tableColumns[$tableName])) {
+                    // This column belongs to a CREATE TABLE in this migration
+                    $this->tableColumns[$tableName][] = $data;
+                }
+            }
+        }
+
+        // Second pass: generate SQL statements
         foreach ($operations as $operation) {
             $sql = $this->operationToSql($operation);
             if ($sql) {
@@ -64,13 +93,72 @@ class SqlGenerator
      */
     protected function generateTableSql(string $action, array $data): ?string
     {
-        $table = $this->prefixTable($data['table'] ?? '');
+        $tableName = $data['table'] ?? '';
+        $table = $this->prefixTable($tableName);
 
         return match ($action) {
-            'create' => "CREATE TABLE `{$table}` (\n    -- columns will be added here\n) ENGINE={$this->engine} DEFAULT CHARSET={$this->charset} COLLATE={$this->collation};",
-            'drop' => "DROP TABLE `{$table}`;",
+            'create' => $this->generateCreateTableSql($tableName, $table),
+            'drop' => "DROP TABLE IF EXISTS `{$table}`;",
             'modify' => "-- ALTER TABLE `{$table}` (modifications follow)",
             default => null,
+        };
+    }
+
+    /**
+     * Generate CREATE TABLE SQL with columns.
+     */
+    protected function generateCreateTableSql(string $tableName, string $prefixedTable): string
+    {
+        $columns = $this->tableColumns[$tableName] ?? [];
+
+        if (empty($columns)) {
+            // Fallback if no columns were collected
+            return "CREATE TABLE IF NOT EXISTS `{$prefixedTable}` (\n    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY\n) ENGINE={$this->engine} DEFAULT CHARSET={$this->charset} COLLATE={$this->collation};";
+        }
+
+        $columnDefinitions = [];
+        $primaryKey = null;
+
+        foreach ($columns as $col) {
+            $colName = $col['column'] ?? '';
+            $colType = $col['type'] ?? 'string';
+            $sqlType = $this->laravelTypeToSql($colType);
+            $definition = $col['definition'] ?? '';
+
+            // Check for auto-increment primary keys
+            if (in_array($colType, ['bigIncrements', 'increments', 'tinyIncrements', 'smallIncrements', 'mediumIncrements'])) {
+                $sqlType = $this->getIncrementsSqlType($colType);
+                $columnDefinitions[] = "    `{$colName}` {$sqlType} NOT NULL AUTO_INCREMENT";
+                $primaryKey = $colName;
+            } else {
+                // Check for nullable in definition
+                $nullable = strpos($definition, '->nullable') !== false ? 'NULL' : 'NOT NULL';
+                $columnDefinitions[] = "    `{$colName}` {$sqlType} {$nullable}";
+            }
+        }
+
+        // Add primary key constraint
+        if ($primaryKey) {
+            $columnDefinitions[] = "    PRIMARY KEY (`{$primaryKey}`)";
+        }
+
+        $columnsStr = implode(",\n", $columnDefinitions);
+
+        return "CREATE TABLE IF NOT EXISTS `{$prefixedTable}` (\n{$columnsStr}\n) ENGINE={$this->engine} DEFAULT CHARSET={$this->charset} COLLATE={$this->collation};";
+    }
+
+    /**
+     * Get SQL type for auto-incrementing columns.
+     */
+    protected function getIncrementsSqlType(string $laravelType): string
+    {
+        return match ($laravelType) {
+            'bigIncrements' => 'BIGINT UNSIGNED',
+            'increments' => 'INT UNSIGNED',
+            'tinyIncrements' => 'TINYINT UNSIGNED',
+            'smallIncrements' => 'SMALLINT UNSIGNED',
+            'mediumIncrements' => 'MEDIUMINT UNSIGNED',
+            default => 'BIGINT UNSIGNED',
         };
     }
 
@@ -79,14 +167,24 @@ class SqlGenerator
      */
     protected function generateColumnSql(string $action, array $data): ?string
     {
-        $table = $this->prefixTable($data['table'] ?? '');
+        $tableName = $data['table'] ?? '';
+        $table = $this->prefixTable($tableName);
         $column = $data['column'] ?? '';
         $type = $data['type'] ?? 'varchar(255)';
 
+        // Skip columns that are part of a CREATE TABLE (already included in the CREATE TABLE SQL)
+        if ($action === 'add' && isset($this->tableColumns[$tableName])) {
+            return null;
+        }
+
         $sqlType = $this->laravelTypeToSql($type);
+        $definition = $data['definition'] ?? '';
+
+        // Check for nullable in definition
+        $nullable = ($action === 'add' && strpos($definition, '->nullable') !== false) ? '' : ' NOT NULL';
 
         return match ($action) {
-            'add' => "ALTER TABLE `{$table}` ADD COLUMN `{$column}` {$sqlType};",
+            'add' => "ALTER TABLE `{$table}` ADD COLUMN `{$column}` {$sqlType}{$nullable};",
             'drop' => "ALTER TABLE `{$table}` DROP COLUMN `{$column}`;",
             'modify' => "ALTER TABLE `{$table}` MODIFY COLUMN `{$column}` {$sqlType};",
             'rename' => "ALTER TABLE `{$table}` RENAME COLUMN `{$data['from']}` TO `{$data['to']}`;",
