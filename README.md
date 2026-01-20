@@ -1,4 +1,18 @@
-# Schema Lens
+<p align="center">
+  <img src="assets/logo.png" alt="Schema Lens" width="400">
+</p>
+
+<p align="center">
+  <strong>Preview Laravel migrations before execution with destructive change detection</strong>
+</p>
+
+<p align="center">
+  <a href="https://packagist.org/packages/zaeem2396/schema-lens"><img src="https://img.shields.io/packagist/v/zaeem2396/schema-lens.svg" alt="Latest Version"></a>
+  <a href="https://packagist.org/packages/zaeem2396/schema-lens"><img src="https://img.shields.io/packagist/dt/zaeem2396/schema-lens.svg" alt="Total Downloads"></a>
+  <a href="https://github.com/zaeem2396/schema-lens/blob/main/LICENSE"><img src="https://img.shields.io/packagist/l/zaeem2396/schema-lens.svg" alt="License"></a>
+</p>
+
+---
 
 A Laravel package that extends the default Artisan CLI with commands to preview a single migration file against the current MySQL schema before execution. It provides comprehensive schema diff analysis, destructive change detection, automatic data export, and rollback simulation.
 
