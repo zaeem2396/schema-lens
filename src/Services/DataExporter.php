@@ -256,7 +256,8 @@ class DataExporter
             'restore_instructions' => $this->generateRestoreInstructions($exports),
         ];
 
-        $exportDir = dirname($exports[0]['export_path']);
+        // Write metadata to the export directory (not its parent)
+        $exportDir = $exports[0]['export_path'];
         $metadataFile = $exportDir.'/restore_metadata.json';
         File::put($metadataFile, json_encode($metadata, JSON_PRETTY_PRINT));
     }

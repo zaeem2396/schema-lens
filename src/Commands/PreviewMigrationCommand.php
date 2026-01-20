@@ -81,9 +81,6 @@ class PreviewMigrationCommand extends BaseCommand
     /**
      * Execute the console command.
      */
-    /**
-     * Execute the console command.
-     */
     public function handle(): int
     {
         $migrationPath = $this->argument('migration');
