@@ -236,12 +236,24 @@ class MigrationParser
                 }
             }
 
-            // Drop column
-            if ($currentTable && preg_match('/->dropColumn\s*\(\s*[\'"]([^\'"]+)[\'"]/', $trimmed, $matches)) {
-                $this->addOperation('column', 'drop', [
-                    'table' => $currentTable,
-                    'column' => $matches[1],
-                ], $lineNumber, $direction);
+            // Drop column — single string: dropColumn('name') or array: dropColumn(['a','b'])
+            if ($currentTable && preg_match('/->dropColumn\s*\(/', $trimmed)) {
+                $columns = $this->extractArrayArgument($trimmed);
+                if (! empty($columns)) {
+                    // Array syntax: dropColumn(['col1','col2'])
+                    foreach ($columns as $columnName) {
+                        $this->addOperation('column', 'drop', [
+                            'table' => $currentTable,
+                            'column' => $columnName,
+                        ], $lineNumber, $direction);
+                    }
+                } elseif (preg_match('/->dropColumn\s*\(\s*[\'"]([^\'"]+)[\'"]/', $trimmed, $matches)) {
+                    // Single string: dropColumn('col')
+                    $this->addOperation('column', 'drop', [
+                        'table' => $currentTable,
+                        'column' => $matches[1],
+                    ], $lineNumber, $direction);
+                }
             }
 
             // Rename column

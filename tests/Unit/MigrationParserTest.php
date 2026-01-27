@@ -70,6 +70,23 @@ class MigrationParserTest extends TestCase
     }
 
     /** @test */
+    public function it_parses_drop_column_array_syntax(): void
+    {
+        // complex_migration down() has dropColumn(['avatar', 'settings'])
+        $result = $this->parser->parse($this->getFixturePath('2024_01_07_000000_complex_migration.php'));
+        $operations = collect($result['operations']);
+
+        $dropOps = $operations->filter(function ($op) {
+            return $op['type'] === 'column' && $op['action'] === 'drop' && $op['direction'] === 'down';
+        });
+
+        $this->assertCount(2, $dropOps);
+        $columns = $dropOps->pluck('data.column')->sort()->values()->toArray();
+        $this->assertEquals(['avatar', 'settings'], $columns);
+        $this->assertEquals('users', $dropOps->first()['data']['table']);
+    }
+
+    /** @test */
     public function it_parses_rename_column_operations(): void
     {
         $result = $this->parser->parse($this->getFixturePath('2024_01_04_000000_rename_column_in_users.php'));

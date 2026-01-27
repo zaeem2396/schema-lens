@@ -173,6 +173,8 @@ class DataExporter
 
     /**
      * Export data to CSV.
+     *
+     * @throws \RuntimeException if the file cannot be opened for writing
      */
     protected function exportToCsv(array $data, string $filePath): void
     {
@@ -183,17 +185,22 @@ class DataExporter
         }
 
         $handle = fopen($filePath, 'w');
-
-        // Write headers
-        $headers = array_keys($data[0]);
-        fputcsv($handle, $headers);
-
-        // Write data
-        foreach ($data as $row) {
-            fputcsv($handle, $row);
+        if ($handle === false) {
+            throw new \RuntimeException("Cannot open CSV file for writing: {$filePath}");
         }
 
-        fclose($handle);
+        try {
+            // Write headers
+            $headers = array_keys($data[0]);
+            fputcsv($handle, $headers);
+
+            // Write data
+            foreach ($data as $row) {
+                fputcsv($handle, $row);
+            }
+        } finally {
+            fclose($handle);
+        }
     }
 
     /**
