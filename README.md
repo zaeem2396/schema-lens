@@ -256,7 +256,7 @@ Only approved migrations will be executed, giving you full control over which de
 The following operations are flagged as destructive:
 
 - `dropTable()` / `dropIfExists()`
-- `dropColumn()`
+- `dropColumn()` — single `dropColumn('col')` or multiple `dropColumn(['col1','col2'])`
 - `dropIndex()`
 - `dropForeign()`
 - `renameColumn()`
