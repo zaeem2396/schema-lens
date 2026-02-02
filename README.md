@@ -419,6 +419,11 @@ migration-preview:
       fi
 ```
 
+## Troubleshooting
+
+- **"Schema Lens schema introspection requires MySQL"** — Use `schema:preview migration.php --sql` to generate SQL without connecting, or run the command against a MySQL database (e.g. in CI).
+- **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
+
 ## Limitations
 
 - Currently supports MySQL/MariaDB only
