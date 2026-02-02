@@ -12,10 +12,18 @@ class MigrationParser
 
     /**
      * Parse a migration file and extract all operations.
+     *
+     * @param  string  $filePath  Absolute or relative path to a readable migration file
+     * @return array{operations: array<int, array<string, mixed>>, line_map: array<int, array<string, mixed>>}
+     *
+     * @throws \RuntimeException if the file cannot be read
      */
     public function parse(string $filePath): array
     {
-        $content = file_get_contents($filePath);
+        $content = @file_get_contents($filePath);
+        if ($content === false) {
+            throw new \RuntimeException("Cannot read migration file: {$filePath}");
+        }
         $lines = explode("\n", $content);
 
         $this->operations = [];
