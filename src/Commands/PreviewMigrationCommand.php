@@ -177,7 +177,10 @@ class PreviewMigrationCommand extends BaseCommand
             return \Illuminate\Console\Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Error: '.$e->getMessage());
-            $this->error($e->getTraceAsString());
+            if ($this->output->isVerbose()) {
+                $this->newLine();
+                $this->line('<fg=gray>'.$e->getTraceAsString().'</>');
+            }
 
             return \Illuminate\Console\Command::FAILURE;
         }
