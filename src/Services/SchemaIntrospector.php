@@ -15,10 +15,28 @@ class SchemaIntrospector
     }
 
     /**
+     * Ensure the default database driver is MySQL. Schema introspection uses information_schema.
+     *
+     * @throws \RuntimeException if the driver is not mysql
+     */
+    protected function ensureMySQLDriver(): void
+    {
+        $driver = DB::connection()->getDriverName();
+        if (strtolower($driver) !== 'mysql') {
+            throw new \RuntimeException(
+                'Schema Lens schema introspection requires MySQL. Current driver: '.$driver.'. '
+                .'Use --sql to preview migrations without connecting to the database.'
+            );
+        }
+    }
+
+    /**
      * Get all tables in the database.
      */
     public function getTables(): Collection
     {
+        $this->ensureMySQLDriver();
+
         return DB::table('information_schema.tables')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_TYPE', 'BASE TABLE')
