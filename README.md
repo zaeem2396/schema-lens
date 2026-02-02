@@ -50,6 +50,10 @@ The package supports:
 - **PHP 8.1+**
 - **Laravel 10.x, 11.x, and 12.x**
 
+**Schema introspection (diff analysis, destructive detection) requires MySQL.** The `schema:preview` command connects to your database to compare the migration against the current schema. If you use SQLite or another driver locally, use `schema:preview migration.php --sql` to generate SQL without connecting, or run full preview against a MySQL database (e.g. in CI).
+
+**Error output:** When a command fails, only the error message is shown by default. Use `-v` / `--verbose` to see the full stack trace (e.g. for debugging).
+
 ## Configuration
 
 Publish the configuration file (optional):
