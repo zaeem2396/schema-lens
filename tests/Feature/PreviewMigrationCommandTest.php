@@ -154,6 +154,37 @@ class PreviewMigrationCommandTest extends TestCase
     }
 
     /** @test */
+    public function it_shows_error_without_stack_trace_when_not_verbose(): void
+    {
+        // Run on SQLite so introspection throws (requires MySQL)
+        if ($this->isMySQL()) {
+            $this->markTestSkipped('This test requires SQLite to trigger introspection error.');
+        }
+
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_01_000000_create_users_table.php'),
+        ])
+            ->assertFailed()
+            ->expectsOutputToContain('Error:');
+    }
+
+    /** @test */
+    public function it_shows_stack_trace_when_verbose(): void
+    {
+        if ($this->isMySQL()) {
+            $this->markTestSkipped('This test requires SQLite to trigger introspection error.');
+        }
+
+        $this->artisan('schema:preview', [
+            'migration' => $this->getFixturePath('2024_01_01_000000_create_users_table.php'),
+            '--verbose' => true,
+        ])
+            ->assertFailed()
+            ->expectsOutputToContain('Error:')
+            ->expectsOutputToContain('SchemaIntrospector');
+    }
+
+    /** @test */
     public function it_shows_line_numbers_in_output(): void
     {
         $this->skipIfNotMySQL();

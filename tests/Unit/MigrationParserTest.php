@@ -16,6 +16,15 @@ class MigrationParserTest extends TestCase
     }
 
     /** @test */
+    public function it_throws_when_migration_file_cannot_be_read(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Cannot read migration file');
+
+        $this->parser->parse(__DIR__.'/../Fixtures/nonexistent_migration_does_not_exist.php');
+    }
+
+    /** @test */
     public function it_parses_create_table_migration(): void
     {
         $result = $this->parser->parse($this->getFixturePath('2024_01_01_000000_create_users_table.php'));
