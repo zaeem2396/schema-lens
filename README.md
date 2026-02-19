@@ -27,6 +27,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - 📊 **Line-by-Line Mapping**: Maps each database change back to exact lines in migration file
 - 🎨 **Clean CLI Output**: Human-readable formatted output
 - 📄 **SQL Preview**: Generate raw SQL statements from migrations
+- ⚙️ **Configurable SQL engine**: Set table engine (InnoDB, MyISAM, etc.) for generated SQL via config
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
 - 📦 **Versioning**: Automatic versioning of exports with restore metadata
