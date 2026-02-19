@@ -28,6 +28,8 @@ class SqlGenerator
         $this->tablePrefix = config("database.connections.{$connection}.prefix", '');
         $this->charset = config("database.connections.{$connection}.charset", 'utf8mb4');
         $this->collation = config("database.connections.{$connection}.collation", 'utf8mb4_unicode_ci');
+        $this->engine = config('schema-lens.sql.engine')
+            ?? config("database.connections.{$connection}.engine", 'InnoDB');
     }
 
     /**
