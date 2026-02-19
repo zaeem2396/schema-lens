@@ -40,6 +40,49 @@ class SqlGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_uses_configurable_table_engine(): void
+    {
+        config()->set('schema-lens.sql.engine', 'MyISAM');
+        $generator = new SqlGenerator;
+
+        $operations = collect([
+            [
+                'type' => 'table',
+                'action' => 'create',
+                'direction' => 'up',
+                'data' => ['table' => 'items'],
+            ],
+        ]);
+
+        $result = $generator->generate($operations);
+
+        $this->assertCount(1, $result);
+        $this->assertStringContainsString('ENGINE=MyISAM', $result[0]['sql']);
+    }
+
+    /** @test */
+    public function it_falls_back_to_database_connection_engine_when_schema_lens_engine_not_set(): void
+    {
+        config()->set('schema-lens.sql.engine', null);
+        config()->set('database.connections.'.config('database.default').'.engine', 'MyISAM');
+        $generator = new SqlGenerator;
+
+        $operations = collect([
+            [
+                'type' => 'table',
+                'action' => 'create',
+                'direction' => 'up',
+                'data' => ['table' => 'items'],
+            ],
+        ]);
+
+        $result = $generator->generate($operations);
+
+        $this->assertCount(1, $result);
+        $this->assertStringContainsString('ENGINE=MyISAM', $result[0]['sql']);
+    }
+
+    /** @test */
     public function it_generates_drop_table_sql(): void
     {
         $operations = collect([
