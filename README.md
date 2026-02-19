@@ -430,6 +430,7 @@ migration-preview:
 
 - **"Schema Lens schema introspection requires MySQL"** — Use `schema:preview migration.php --sql` to generate SQL without connecting, or run the command against a MySQL database (e.g. in CI).
 - **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
+- **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
 
 ## Limitations
 
