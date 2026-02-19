@@ -114,6 +114,8 @@ php artisan schema:preview database/migrations/2024_01_01_000000_create_users_ta
 php artisan schema:preview database/migrations/2024_01_01_000000_create_users_table.php --format=sql
 ```
 
+The table engine in generated SQL (e.g. `ENGINE=InnoDB`) is configurable via `config/schema-lens.php` → `sql.engine` or the `SCHEMA_LENS_SQL_ENGINE` env variable.
+
 **Example output:**
 
 ```
