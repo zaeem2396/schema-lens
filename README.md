@@ -75,8 +75,13 @@ return [
         'format' => env('SCHEMA_LENS_OUTPUT_FORMAT', 'cli'),
         'show_line_numbers' => env('SCHEMA_LENS_SHOW_LINE_NUMBERS', true),
     ],
+    'sql' => [
+        'engine' => env('SCHEMA_LENS_SQL_ENGINE'), // e.g. InnoDB, MyISAM; falls back to DB connection engine
+    ],
 ];
 ```
+
+The **SQL engine** (`schema-lens.sql.engine` or `SCHEMA_LENS_SQL_ENGINE`) is used in generated `CREATE TABLE` statements when using `schema:preview --sql`. If not set, the default database connection's engine is used (typically InnoDB).
 
 ## Usage
 
