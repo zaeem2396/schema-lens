@@ -27,6 +27,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - 📊 **Line-by-Line Mapping**: Maps each database change back to exact lines in migration file
 - 🎨 **Clean CLI Output**: Human-readable formatted output
 - 📄 **SQL Preview**: Generate raw SQL statements from migrations
+- ⚙️ **Configurable SQL engine**: Set table engine (InnoDB, MyISAM, etc.) for generated SQL via config
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
 - 📦 **Versioning**: Automatic versioning of exports with restore metadata
@@ -75,8 +76,13 @@ return [
         'format' => env('SCHEMA_LENS_OUTPUT_FORMAT', 'cli'),
         'show_line_numbers' => env('SCHEMA_LENS_SHOW_LINE_NUMBERS', true),
     ],
+    'sql' => [
+        'engine' => env('SCHEMA_LENS_SQL_ENGINE'), // e.g. InnoDB, MyISAM; falls back to DB connection engine
+    ],
 ];
 ```
+
+The **SQL engine** (`schema-lens.sql.engine` or `SCHEMA_LENS_SQL_ENGINE`) is used in generated `CREATE TABLE` statements when using `schema:preview --sql`. If not set, the default database connection's engine is used (typically InnoDB).
 
 ## Usage
 
@@ -108,6 +114,8 @@ php artisan schema:preview database/migrations/2024_01_01_000000_create_users_ta
 # Or use format option
 php artisan schema:preview database/migrations/2024_01_01_000000_create_users_table.php --format=sql
 ```
+
+The table engine in generated SQL (e.g. `ENGINE=InnoDB`) is configurable via `config/schema-lens.php` → `sql.engine` or the `SCHEMA_LENS_SQL_ENGINE` env variable.
 
 **Example output:**
 
@@ -423,6 +431,7 @@ migration-preview:
 
 - **"Schema Lens schema introspection requires MySQL"** — Use `schema:preview migration.php --sql` to generate SQL without connecting, or run the command against a MySQL database (e.g. in CI).
 - **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
+- **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
 
 ## Limitations
 

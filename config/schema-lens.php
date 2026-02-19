@@ -39,4 +39,20 @@ return [
         // Show detailed line numbers in output
         'show_line_numbers' => env('SCHEMA_LENS_SHOW_LINE_NUMBERS', true),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | SQL Generation Settings
+    |--------------------------------------------------------------------------
+    |
+    | Options for generated SQL (e.g. schema:preview --sql). The table engine
+    | is used in CREATE TABLE statements. If not set, the default database
+    | connection's engine is used, falling back to InnoDB.
+    |
+    */
+
+    'sql' => [
+        // Table engine for CREATE TABLE (e.g. InnoDB, MyISAM)
+        'engine' => env('SCHEMA_LENS_SQL_ENGINE'),
+    ],
 ];
