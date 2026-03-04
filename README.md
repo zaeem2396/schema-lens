@@ -135,6 +135,8 @@ php artisan schema:graph --format=json
 
 The graph is derived from `CREATE TABLE` and foreign key operations in each migration. Circular dependencies are detected and reported.
 
+**Options:** `--path` — custom migrations directory; `--format=json` — machine-readable graph.
+
 **Example output (CLI):**
 
 ```
