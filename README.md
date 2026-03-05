@@ -28,6 +28,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - 🎨 **Clean CLI Output**: Human-readable formatted output
 - 📄 **SQL Preview**: Generate raw SQL statements from migrations
 - ⚙️ **Configurable SQL engine**: Set table engine (InnoDB, MyISAM, etc.) for generated SQL via config
+- 📊 **Migration Dependency Graph**: Visualize migration dependencies (foreign keys) as ASCII tree or JSON
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
 - 📦 **Versioning**: Automatic versioning of exports with restore metadata
@@ -116,6 +117,35 @@ php artisan schema:preview database/migrations/2024_01_01_000000_create_users_ta
 ```
 
 The table engine in generated SQL (e.g. `ENGINE=InnoDB`) is configurable via `config/schema-lens.php` → `sql.engine` or the `SCHEMA_LENS_SQL_ENGINE` env variable.
+
+### Migration Dependency Graph
+
+Visualize which migrations depend on others (e.g. foreign key relationships):
+
+```bash
+# Default: ASCII tree (uses database/migrations)
+php artisan schema:graph
+
+# Custom path
+php artisan schema:graph --path=database/migrations
+
+# JSON output
+php artisan schema:graph --format=json
+```
+
+The graph is derived from `CREATE TABLE` and foreign key operations in each migration. Circular dependencies are detected and reported.
+
+**Options:** `--path` — custom migrations directory; `--format=json` — machine-readable graph.
+
+**Example output (CLI):**
+
+```
+Migration Dependency Graph
+
+├── 2024_01_01_000000_create_users_table
+│   └── 2024_01_06_000000_create_posts_with_foreign_key
+└── 2024_01_06_000000_create_posts_with_foreign_key
+```
 
 **Example output:**
 

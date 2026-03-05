@@ -157,6 +157,16 @@ Quick reference guide for testing Schema Lens in different scenarios.
 - [ ] Verify: ZIP file created
 - [ ] Verify: ZIP contains CSV and JSON files
 
+### 21. Migration Dependency Graph
+- [ ] Run: `php artisan schema:graph`
+- [ ] Verify: Output shows "Migration Dependency Graph"
+- [ ] Verify: Migrations listed (e.g. create_users_table, create_posts_with_foreign_key)
+- [ ] Verify: Tree shows dependencies (posts depending on users)
+- [ ] Run: `php artisan schema:graph --format=json`
+- [ ] Verify: Valid JSON with `migrations`, `nodes`, `edges`, `circular`
+- [ ] Run: `php artisan schema:graph --path=nonexistent`
+- [ ] Verify: Error message and non-zero exit code
+
 ---
 
 ## Edge Cases to Test
