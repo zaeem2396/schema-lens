@@ -108,11 +108,16 @@ class DependencyAnalyzer
             }
         }
 
+        $seenEdges = [];
         foreach ($nodes as $name => $usage) {
             foreach ($usage['references'] as $refTable) {
                 $dep = $tableToMigration[$refTable] ?? null;
                 if ($dep !== null && $dep !== $name) {
-                    $edges[] = ['from' => $name, 'to' => $dep];
+                    $key = $name.'::'.$dep;
+                    if (! isset($seenEdges[$key])) {
+                        $seenEdges[$key] = true;
+                        $edges[] = ['from' => $name, 'to' => $dep];
+                    }
                 }
             }
         }
