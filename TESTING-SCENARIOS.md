@@ -166,6 +166,8 @@ Quick reference guide for testing Schema Lens in different scenarios.
 - [ ] Verify: Valid JSON with `migrations`, `nodes`, `edges`, `circular`
 - [ ] Run: `php artisan schema:graph --path=nonexistent`
 - [ ] Verify: Error message, hint to check directory, and non-zero exit code
+- [ ] Run: `php artisan schema:graph --path=<empty-directory>` (directory with no .php files)
+- [ ] Verify: "No migration files found" message and non-zero exit code
 
 ---
 
