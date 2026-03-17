@@ -15,3 +15,5 @@ All notable changes to this project will be documented in this file.
 
 - README: documented exit code behavior for empty path and edge deduplication.
 - TESTING-SCENARIOS: scenario 21 updated for path-not-found hint and empty-directory verification.
+
+Before tagging v1.4.1: run `composer check` (Pint, PHPStan, PHPUnit).
