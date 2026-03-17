@@ -2,6 +2,7 @@
 
 namespace Zaeem2396\SchemaLens\Tests;
 
+use Exception;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Zaeem2396\SchemaLens\SchemaLensServiceProvider;
 
@@ -80,7 +81,7 @@ abstract class TestCase extends BaseTestCase
             $driver = $this->app['db']->connection()->getDriverName();
 
             return in_array($driver, ['mysql', 'mariadb']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }

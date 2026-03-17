@@ -2,6 +2,7 @@
 
 namespace Zaeem2396\SchemaLens\Tests\Feature;
 
+use Exception;
 use Zaeem2396\SchemaLens\Tests\TestCase;
 
 /**
@@ -24,7 +25,7 @@ class SafeMigrateCommandTest extends TestCase
                     $table->string('migration');
                     $table->integer('batch');
                 });
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Table might already exist
             }
         }
@@ -36,7 +37,7 @@ class SafeMigrateCommandTest extends TestCase
             try {
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('migrations');
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('users');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Ignore cleanup errors
             }
         }
@@ -283,7 +284,7 @@ PHP;
             // Also drop table if it was created
             try {
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('test_single_table');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Ignore
             }
         }
