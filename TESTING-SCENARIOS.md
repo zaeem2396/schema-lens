@@ -165,7 +165,7 @@ Quick reference guide for testing Schema Lens in different scenarios.
 - [ ] Run: `php artisan schema:graph --format=json`
 - [ ] Verify: Valid JSON with `migrations`, `nodes`, `edges`, `circular`
 - [ ] Run: `php artisan schema:graph --path=nonexistent`
-- [ ] Verify: Error message and non-zero exit code
+- [ ] Verify: Error message, hint to check directory, and non-zero exit code
 
 ---
 
