@@ -37,7 +37,7 @@ class DependencyGraphCommand extends Command
         if (empty($graph['nodes'])) {
             $this->warn('No migration files found in '.$path);
 
-            return self::SUCCESS;
+            return $this->option('path') ? self::FAILURE : self::SUCCESS;
         }
 
         if (! empty($graph['circular'])) {
