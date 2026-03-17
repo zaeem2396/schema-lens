@@ -80,6 +80,7 @@ class DependencyAnalyzer
     /**
      * Build dependency graph for all migrations in path.
      * Migration A depends on B if A references a table that B creates.
+     * Edges are deduplicated (at most one edge per migration pair).
      *
      * @return array{
      *   nodes: array<string, array{creates: array<string>, references: array<string>}>,
