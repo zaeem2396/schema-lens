@@ -2,7 +2,9 @@
 
 namespace Zaeem2396\SchemaLens\Commands;
 
+use Exception;
 use Illuminate\Console\Command as BaseCommand;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Zaeem2396\SchemaLens\Formatters\CliFormatter;
@@ -92,7 +94,7 @@ class PreviewMigrationCommand extends BaseCommand
         if (! $migrationFile || ! File::exists($migrationFile)) {
             $this->error("Migration file not found: {$migrationPath}");
 
-            return \Illuminate\Console\Command::FAILURE;
+            return self::FAILURE;
         }
 
         $this->info("Analyzing migration: {$migrationFile}");
@@ -171,25 +173,25 @@ class PreviewMigrationCommand extends BaseCommand
                 $this->newLine();
                 $this->warn('⚠️  Migration contains destructive changes!');
 
-                return \Illuminate\Console\Command::FAILURE;
+                return self::FAILURE;
             }
 
-            return \Illuminate\Console\Command::SUCCESS;
-        } catch (\Exception $e) {
+            return self::SUCCESS;
+        } catch (Exception $e) {
             $this->error('Error: '.$e->getMessage());
             if ($this->output->isVerbose()) {
                 $this->newLine();
                 $this->line('<fg=gray>'.$e->getTraceAsString().'</>');
             }
 
-            return \Illuminate\Console\Command::FAILURE;
+            return self::FAILURE;
         }
     }
 
     /**
      * Handle SQL format output.
      */
-    protected function handleSqlFormat(\Illuminate\Support\Collection $operations, string $migrationFile): int
+    protected function handleSqlFormat(Collection $operations, string $migrationFile): int
     {
         $this->info('Generating SQL statements...');
         $this->newLine();
@@ -199,7 +201,7 @@ class PreviewMigrationCommand extends BaseCommand
         if (empty($statements)) {
             $this->warn('No SQL statements generated. The migration may not contain schema operations.');
 
-            return \Illuminate\Console\Command::SUCCESS;
+            return self::SUCCESS;
         }
 
         $sqlScript = $this->sqlGenerator->formatAsSqlScript($statements, $migrationFile);
@@ -224,7 +226,7 @@ class PreviewMigrationCommand extends BaseCommand
             $this->displaySqlOutput($sqlScript, $statements);
         }
 
-        return \Illuminate\Console\Command::SUCCESS;
+        return self::SUCCESS;
     }
 
     /**

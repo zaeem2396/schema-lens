@@ -2,6 +2,8 @@
 
 namespace Zaeem2396\SchemaLens\Tests\Feature;
 
+use Exception;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\File;
 use Zaeem2396\SchemaLens\Tests\TestCase;
 
@@ -27,7 +29,7 @@ class PreviewMigrationCommandTest extends TestCase
                     $table->string('email')->unique();
                     $table->timestamps();
                 });
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Table might already exist
             }
         }
@@ -40,7 +42,7 @@ class PreviewMigrationCommandTest extends TestCase
             try {
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('users');
                 $this->app['db']->connection()->getSchemaBuilder()->dropIfExists('posts');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Ignore cleanup errors
             }
         }
@@ -325,7 +327,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_has_sql_option(): void
     {
-        $command = $this->app->make(\Illuminate\Contracts\Console\Kernel::class)
+        $command = $this->app->make(Kernel::class)
             ->all()['schema:preview'];
 
         $definition = $command->getDefinition();
@@ -337,7 +339,7 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_has_output_option(): void
     {
-        $command = $this->app->make(\Illuminate\Contracts\Console\Kernel::class)
+        $command = $this->app->make(Kernel::class)
             ->all()['schema:preview'];
 
         $definition = $command->getDefinition();

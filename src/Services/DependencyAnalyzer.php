@@ -80,6 +80,7 @@ class DependencyAnalyzer
     /**
      * Build dependency graph for all migrations in path.
      * Migration A depends on B if A references a table that B creates.
+     * Edges are deduplicated (at most one edge per migration pair).
      *
      * @return array{
      *   nodes: array<string, array{creates: array<string>, references: array<string>}>,
@@ -108,11 +109,16 @@ class DependencyAnalyzer
             }
         }
 
+        $seenEdges = [];
         foreach ($nodes as $name => $usage) {
             foreach ($usage['references'] as $refTable) {
                 $dep = $tableToMigration[$refTable] ?? null;
                 if ($dep !== null && $dep !== $name) {
-                    $edges[] = ['from' => $name, 'to' => $dep];
+                    $key = $name.'::'.$dep;
+                    if (! isset($seenEdges[$key])) {
+                        $seenEdges[$key] = true;
+                        $edges[] = ['from' => $name, 'to' => $dep];
+                    }
                 }
             }
         }

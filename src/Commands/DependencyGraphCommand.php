@@ -13,12 +13,16 @@ class DependencyGraphCommand extends Command
 
     protected $description = 'Show migration dependency graph (tables and foreign keys)';
 
+    /**
+     * Run the command. Returns FAILURE when --path is set and the path is empty or has no migrations.
+     */
     public function handle(DependencyAnalyzer $analyzer): int
     {
         $path = $this->option('path') ?: database_path('migrations');
 
         if (! is_dir($path)) {
             $this->error("Migrations path not found: {$path}");
+            $this->line('  Check that the directory exists and that --path is correct.');
 
             return self::FAILURE;
         }
@@ -36,8 +40,9 @@ class DependencyGraphCommand extends Command
 
         if (empty($graph['nodes'])) {
             $this->warn('No migration files found in '.$path);
+            $this->line('  Add .php migration files or use --path to point to another directory.');
 
-            return self::SUCCESS;
+            return $this->option('path') ? self::FAILURE : self::SUCCESS;
         }
 
         if (! empty($graph['circular'])) {

@@ -72,4 +72,29 @@ class DependencyAnalyzerTest extends TestCase
         $edgesFromPosts = array_filter($graph['edges'], fn ($e) => str_contains($e['from'], 'posts') && str_contains($e['to'], 'users'));
         $this->assertNotEmpty($edgesFromPosts, 'Expected at least one edge from posts migration to users migration');
     }
+
+    /** @test */
+    public function it_deduplicates_edges_when_migration_references_same_table_multiple_times(): void
+    {
+        $path = $this->getFixturePath();
+        $graph = $this->analyzer->buildGraph($path);
+
+        $keys = array_map(fn ($e) => $e['from'].'::'.$e['to'], $graph['edges']);
+        $this->assertCount(count($keys), array_unique($keys), 'Edges must be deduplicated by from-to pair');
+    }
+
+    /** @test */
+    public function it_returns_empty_nodes_for_directory_with_no_php_files(): void
+    {
+        $emptyPath = sys_get_temp_dir().'/schema-lens-empty-'.uniqid();
+        mkdir($emptyPath, 0755, true);
+        try {
+            $graph = $this->analyzer->buildGraph($emptyPath);
+            $this->assertSame([], $graph['nodes']);
+            $this->assertSame([], $graph['edges']);
+            $this->assertSame([], $graph['circular']);
+        } finally {
+            rmdir($emptyPath);
+        }
+    }
 }

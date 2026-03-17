@@ -158,6 +158,9 @@ Quick reference guide for testing Schema Lens in different scenarios.
 - [ ] Verify: ZIP contains CSV and JSON files
 
 ### 21. Migration Dependency Graph
+
+Run `composer check` (Pint, PHPStan, PHPUnit) before release when changing this command.
+
 - [ ] Run: `php artisan schema:graph`
 - [ ] Verify: Output shows "Migration Dependency Graph"
 - [ ] Verify: Migrations listed (e.g. create_users_table, create_posts_with_foreign_key)
@@ -165,7 +168,9 @@ Quick reference guide for testing Schema Lens in different scenarios.
 - [ ] Run: `php artisan schema:graph --format=json`
 - [ ] Verify: Valid JSON with `migrations`, `nodes`, `edges`, `circular`
 - [ ] Run: `php artisan schema:graph --path=nonexistent`
-- [ ] Verify: Error message and non-zero exit code
+- [ ] Verify: Error message, hint to check directory, and non-zero exit code
+- [ ] Run: `php artisan schema:graph --path=<empty-directory>` (directory with no .php files)
+- [ ] Verify: "No migration files found" message and non-zero exit code
 
 ---
 
