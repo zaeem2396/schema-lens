@@ -3,6 +3,7 @@
 namespace Zaeem2396\SchemaLens\Tests\Feature;
 
 use Exception;
+use Zaeem2396\SchemaLens\Commands\SafeMigrateCommand;
 use Zaeem2396\SchemaLens\Tests\TestCase;
 
 /**
@@ -61,7 +62,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_has_correct_signature(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
 
         $this->assertStringContainsString('migrate:safe', $command->getName());
     }
@@ -69,7 +70,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_has_force_option(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         $this->assertTrue($definition->hasOption('force'));
@@ -78,7 +79,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_has_seed_option(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         $this->assertTrue($definition->hasOption('seed'));
@@ -87,7 +88,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_has_step_option(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         $this->assertTrue($definition->hasOption('step'));
@@ -96,7 +97,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_has_pretend_option(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         $this->assertTrue($definition->hasOption('pretend'));
@@ -105,7 +106,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_has_no_backup_option(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         $this->assertTrue($definition->hasOption('no-backup'));
@@ -125,7 +126,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_has_interactive_option(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         $this->assertTrue($definition->hasOption('interactive'));
@@ -134,7 +135,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function interactive_option_has_correct_description(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
         $option = $definition->getOption('interactive');
 
@@ -145,7 +146,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function interactive_option_does_not_require_value(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
         $option = $definition->getOption('interactive');
 
@@ -155,7 +156,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function interactive_option_defaults_to_false(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
         $option = $definition->getOption('interactive');
 
@@ -179,7 +180,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function command_accepts_path_argument(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         $this->assertTrue($definition->hasArgument('path'));
@@ -188,7 +189,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function path_argument_is_optional(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
         $argument = $definition->getArgument('path');
 
@@ -198,7 +199,7 @@ class SafeMigrateCommandTest extends TestCase
     /** @test */
     public function path_argument_has_correct_description(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
         $argument = $definition->getArgument('path');
 
@@ -293,7 +294,7 @@ PHP;
     /** @test */
     public function single_migration_can_use_interactive_option(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         // Both path argument and interactive option should be available
@@ -304,7 +305,7 @@ PHP;
     /** @test */
     public function single_migration_can_use_no_backup_option(): void
     {
-        $command = $this->app->make(\Zaeem2396\SchemaLens\Commands\SafeMigrateCommand::class);
+        $command = $this->app->make(SafeMigrateCommand::class);
         $definition = $command->getDefinition();
 
         // Both path argument and no-backup option should be available
