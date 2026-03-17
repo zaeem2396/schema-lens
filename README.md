@@ -137,7 +137,7 @@ The graph is derived from `CREATE TABLE` and foreign key operations in each migr
 
 **Exit codes:** If you pass `--path` and that directory is empty or contains no migration files, the command exits with code 1. With the default path, an empty directory yields a warning but exit code 0.
 
-**Options:** `--path` — custom migrations directory; `--format=json` — machine-readable graph.
+**Options:** `--path` — custom migrations directory; `--format=json` — machine-readable graph. See TESTING-SCENARIOS.md scenario 21 for manual verification steps.
 
 **Example output (CLI):**
 
