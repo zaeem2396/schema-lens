@@ -13,6 +13,9 @@ class DependencyGraphCommand extends Command
 
     protected $description = 'Show migration dependency graph (tables and foreign keys)';
 
+    /**
+     * Run the command. Returns FAILURE when --path is set and the path is empty or has no migrations.
+     */
     public function handle(DependencyAnalyzer $analyzer): int
     {
         $path = $this->option('path') ?: database_path('migrations');
