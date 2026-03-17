@@ -19,6 +19,7 @@ class DependencyGraphCommand extends Command
 
         if (! is_dir($path)) {
             $this->error("Migrations path not found: {$path}");
+            $this->line('  Check that the directory exists and that --path is correct.');
 
             return self::FAILURE;
         }
