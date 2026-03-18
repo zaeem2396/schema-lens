@@ -50,7 +50,7 @@ composer require zaeem2396/schema-lens
 
 The package supports:
 - **PHP 8.1+**
-- **Laravel 10.x, 11.x, and 12.x**
+- **Laravel 10.x through 13.x**
 
 **Schema introspection (diff analysis, destructive detection) requires MySQL.** The `schema:preview` command connects to your database to compare the migration against the current schema. If you use SQLite or another driver locally, use `schema:preview migration.php --sql` to generate SQL without connecting, or run full preview against a MySQL database (e.g. in CI).
 
@@ -420,7 +420,7 @@ Schema Lens analyzes the `down()` method of migrations to:
 ## Requirements
 
 - PHP 8.1+
-- Laravel 10.x, 11.x, or 12.x
+- Laravel 10.x–13.x (Laravel 13 requires PHP 8.3+)
 - MySQL 5.7+ or MariaDB 10.2+
 - Access to `information_schema` database
 

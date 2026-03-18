@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Laravel 13** support: `illuminate/*` constraints extended to `^13.0`; dev dependency `orchestra/testbench` `^11.0` for tests on Laravel 13. CI runs tests on PHP 8.3+ with Laravel 13.
+
 ## [1.4.1] - 2025-01-27
 
 ### Fixed
