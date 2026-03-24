@@ -55,4 +55,14 @@ return [
         // Table engine for CREATE TABLE (e.g. InnoDB, MyISAM)
         'engine' => env('SCHEMA_LENS_SQL_ENGINE'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Schema diff (`schema:diff`)
+    |--------------------------------------------------------------------------
+    |
+    | No extra options here: pass Laravel connection names from config/database.php.
+    | Both connections must use the mysql driver.
+    |
+    */
 ];
