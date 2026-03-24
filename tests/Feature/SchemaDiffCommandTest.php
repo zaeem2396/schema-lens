@@ -2,6 +2,7 @@
 
 namespace Zaeem2396\SchemaLens\Tests\Feature;
 
+use Illuminate\Support\Facades\Config;
 use Zaeem2396\SchemaLens\Tests\TestCase;
 
 class SchemaDiffCommandTest extends TestCase
@@ -28,9 +29,16 @@ class SchemaDiffCommandTest extends TestCase
     /** @test */
     public function it_fails_when_connection_is_not_mysql(): void
     {
+        $conn = 'schema_lens_sqlite_non_mysql';
+        Config::set("database.connections.{$conn}", [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
+
         $this->artisan('schema:diff', [
-            'from' => 'testing',
-            'to' => 'testing',
+            'from' => $conn,
+            'to' => $conn,
         ])
             ->assertFailed()
             ->expectsOutputToContain('mysql driver');
