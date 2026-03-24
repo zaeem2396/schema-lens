@@ -1,4 +1,5 @@
 name: Code Style
+# Pint runs on the full src/ tree (including schema:diff and related services).
 
 on:
   push:
