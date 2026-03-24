@@ -29,6 +29,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - 📄 **SQL Preview**: Generate raw SQL statements from migrations
 - ⚙️ **Configurable SQL engine**: Set table engine (InnoDB, MyISAM, etc.) for generated SQL via config
 - 📊 **Migration Dependency Graph**: Visualize migration dependencies (foreign keys) as ASCII tree or JSON
+- 🔀 **Schema diff between environments**: Compare two MySQL connections (missing tables/columns, type mismatches)
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
 - 📦 **Versioning**: Automatic versioning of exports with restore metadata
@@ -147,6 +148,38 @@ Migration Dependency Graph
 ├── 2024_01_01_000000_create_users_table
 │   └── 2024_01_06_000000_create_posts_with_foreign_key
 └── 2024_01_06_000000_create_posts_with_foreign_key
+```
+
+### Schema diff between environments
+
+Compare live MySQL schemas from two Laravel database connections (for example local vs staging). Both connections must use the `mysql` driver and exist in `config/database.php`.
+
+```bash
+php artisan schema:diff mysql mysql_staging
+
+# Named options (same as positional arguments)
+php artisan schema:diff --from=mysql --to=mysql_staging
+
+# Machine-readable output
+php artisan schema:diff mysql mysql_staging --format=json
+
+# Suggested migration-style hints for gaps (review before using)
+php artisan schema:diff mysql mysql_staging --stubs
+```
+
+**Exit codes:** The command exits with code **1** when any structural difference is found (missing/extra tables or columns, type or nullable mismatches). Use `--exit-zero` if you only need output in scripts without a failing exit code. It exits **0** when schemas match or when `--exit-zero` is set.
+
+**Example output (CLI):**
+
+```
+Schema differences: mysql → mysql_staging
+(Reference = mysql; missing below means absent on mysql_staging)
+
+MISSING TABLES ON mysql_staging:
+  ✗ Table: user_preferences
+
+TYPE MISMATCH:
+  ⚠ posts.body: text (mysql) vs longtext (mysql_staging)
 ```
 
 **Example output:**
