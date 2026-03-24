@@ -11,7 +11,9 @@
         "destructive-changes",
         "data-export",
         "artisan",
-        "cli"
+        "cli",
+        "schema-diff",
+        "environments"
     ],
     "type": "library",
     "license": "MIT",
