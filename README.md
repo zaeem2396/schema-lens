@@ -498,6 +498,10 @@ migration-preview:
 - **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
 - **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
 
+
+- **`schema:diff` requires two MySQL connections** — Add both to `config/database.php`; SQLite or other drivers are rejected for this command.
+- **`schema:diff` exits 1 on drift** — Use `--exit-zero` in CI if you only want logs without failing the job.
+
 ## Limitations
 
 - Currently supports MySQL/MariaDB only
