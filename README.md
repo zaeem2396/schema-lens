@@ -39,6 +39,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 ```bash
 composer require zaeem2396/schema-lens
 php artisan schema:preview database/migrations/your_migration.php
+# Compare two MySQL connections (optional): php artisan schema:diff mysql mysql_staging
 ```
 
 📖 **For detailed usage instructions, testing scenarios, and examples, see [USAGE.md](USAGE.md)**
@@ -497,13 +498,12 @@ migration-preview:
 - **"Schema Lens schema introspection requires MySQL"** — Use `schema:preview migration.php --sql` to generate SQL without connecting, or run the command against a MySQL database (e.g. in CI).
 - **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
 - **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
-
-
 - **`schema:diff` requires two MySQL connections** — Add both to `config/database.php`; SQLite or other drivers are rejected for this command.
 - **`schema:diff` exits 1 on drift** — Use `--exit-zero` in CI if you only want logs without failing the job.
 
 ## Limitations
 
+- `schema:diff` compares **structure** only (tables/columns/types), not row data or triggers
 - Currently supports MySQL/MariaDB only
 - Requires direct database connection (no cloud services)
 - Schema introspection uses `information_schema` tables
