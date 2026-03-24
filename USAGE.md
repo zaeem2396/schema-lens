@@ -4,7 +4,7 @@
 1. [Installation](#installation)
 2. [Configuration](#configuration)
 3. [Basic Usage](#basic-usage)
-4. [Advanced Usage](#advanced-usage)
+4. [Advanced Usage](#advanced-usage) (includes [schema diff](#compare-schemas-between-environments))
 5. [Testing Scenarios](#testing-scenarios)
 6. [Common Use Cases](#common-use-cases)
 7. [Troubleshooting](#troubleshooting)
