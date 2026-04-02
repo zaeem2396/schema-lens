@@ -1,7 +1,7 @@
 # Schema Lens Roadmap
 
-> **Current Version:** v1.5.0 (unreleased)  
-> **Last Updated:** March 2026
+> **Current Version:** v4.6.0 (release branch)  
+> **Last Updated:** April 2026
 
 This document outlines the planned features and enhancements for Schema Lens. Each feature includes a dedicated git branch name for tracking development progress.
 
@@ -895,6 +895,8 @@ git push origin feature/interactive-mode
 
 | Date | Version | Changes |
 |------|---------|---------|
+| Apr 2026 | v4.6.0 | `schema:diff` — compare MySQL schemas across two Laravel DB connections; JSON and `--stubs`; optional named connection on `SchemaIntrospector`; docs and scenario 22 |
+| Mar 2026 | v4.5.0 | Laravel 13 support (`illuminate/*` ^13, Orchestra Testbench ^11); CI matrix for Laravel 13; README and `pint.json` updates |
 | Jan 2025 | v1.3.0 | Configurable table engine for generated SQL via `schema-lens.sql.engine` / `SCHEMA_LENS_SQL_ENGINE`; falls back to DB connection then InnoDB |
 | Jan 2025 | v1.2.3 | Defensive fixes: MigrationParser throws on unreadable file; commands show stack trace only with `--verbose`; SchemaIntrospector fails fast with clear message when driver is not MySQL |
 | Jan 2025 | v1.2.2 | Bug fixes: MigrationParser parses `dropColumn(['col1','col2'])` array syntax; DataExporter throws on CSV fopen failure instead of undefined behavior |
