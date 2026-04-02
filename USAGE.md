@@ -4,7 +4,7 @@
 1. [Installation](#installation)
 2. [Configuration](#configuration)
 3. [Basic Usage](#basic-usage)
-4. [Advanced Usage](#advanced-usage)
+4. [Advanced Usage](#advanced-usage) (includes [schema diff](#compare-schemas-between-environments))
 5. [Testing Scenarios](#testing-scenarios)
 6. [Common Use Cases](#common-use-cases)
 7. [Troubleshooting](#troubleshooting)
@@ -163,6 +163,19 @@ for migration in database/migrations/*.php; do
     echo "---"
 done
 ```
+
+### Compare schemas between environments
+
+Use `schema:diff` to compare two **MySQL** Laravel connections (define both in `config/database.php`). The first connection is the reference schema; differences are reported relative to the second.
+
+```bash
+php artisan schema:diff mysql mysql_staging
+php artisan schema:diff --from=mysql --to=mysql_staging
+php artisan schema:diff mysql mysql_staging --format=json
+php artisan schema:diff mysql mysql_staging --stubs
+```
+
+Use `--exit-zero` when a shell script should not fail on schema drift (you still get full output). Without it, the command exits with code 1 when any structural difference exists.
 
 ---
 

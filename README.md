@@ -29,6 +29,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - 📄 **SQL Preview**: Generate raw SQL statements from migrations
 - ⚙️ **Configurable SQL engine**: Set table engine (InnoDB, MyISAM, etc.) for generated SQL via config
 - 📊 **Migration Dependency Graph**: Visualize migration dependencies (foreign keys) as ASCII tree or JSON
+- 🔀 **Schema diff between environments**: Compare two MySQL connections (missing tables/columns, type mismatches)
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
 - 📦 **Versioning**: Automatic versioning of exports with restore metadata
@@ -38,6 +39,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 ```bash
 composer require zaeem2396/schema-lens
 php artisan schema:preview database/migrations/your_migration.php
+# Compare two MySQL connections (optional): php artisan schema:diff mysql mysql_staging
 ```
 
 📖 **For detailed usage instructions, testing scenarios, and examples, see [USAGE.md](USAGE.md)**
@@ -147,6 +149,38 @@ Migration Dependency Graph
 ├── 2024_01_01_000000_create_users_table
 │   └── 2024_01_06_000000_create_posts_with_foreign_key
 └── 2024_01_06_000000_create_posts_with_foreign_key
+```
+
+### Schema diff between environments
+
+Compare live MySQL schemas from two Laravel database connections (for example local vs staging). Both connections must use the `mysql` driver and exist in `config/database.php`.
+
+```bash
+php artisan schema:diff mysql mysql_staging
+
+# Named options (same as positional arguments)
+php artisan schema:diff --from=mysql --to=mysql_staging
+
+# Machine-readable output
+php artisan schema:diff mysql mysql_staging --format=json
+
+# Suggested migration-style hints for gaps (review before using)
+php artisan schema:diff mysql mysql_staging --stubs
+```
+
+**Exit codes:** The command exits with code **1** when any structural difference is found (missing/extra tables or columns, type or nullable mismatches). Use `--exit-zero` if you only need output in scripts without a failing exit code. It exits **0** when schemas match or when `--exit-zero` is set.
+
+**Example output (CLI):**
+
+```
+Schema differences: mysql → mysql_staging
+(Reference = mysql; missing below means absent on mysql_staging)
+
+MISSING TABLES ON mysql_staging:
+  ✗ Table: user_preferences
+
+TYPE MISMATCH:
+  ⚠ posts.body: text (mysql) vs longtext (mysql_staging)
 ```
 
 **Example output:**
@@ -464,9 +498,12 @@ migration-preview:
 - **"Schema Lens schema introspection requires MySQL"** — Use `schema:preview migration.php --sql` to generate SQL without connecting, or run the command against a MySQL database (e.g. in CI).
 - **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
 - **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
+- **`schema:diff` requires two MySQL connections** — Add both to `config/database.php`; SQLite or other drivers are rejected for this command.
+- **`schema:diff` exits 1 on drift** — Use `--exit-zero` in CI if you only want logs without failing the job.
 
 ## Limitations
 
+- `schema:diff` compares **structure** only (tables/columns/types), not row data or triggers
 - Currently supports MySQL/MariaDB only
 - Requires direct database connection (no cloud services)
 - Schema introspection uses `information_schema` tables

@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Zaeem2396\SchemaLens\Commands\DependencyGraphCommand;
 use Zaeem2396\SchemaLens\Commands\PreviewMigrationCommand;
 use Zaeem2396\SchemaLens\Commands\SafeMigrateCommand;
+use Zaeem2396\SchemaLens\Commands\SchemaDiffCommand;
 
 /**
  * Schema Lens Service Provider
@@ -37,6 +38,7 @@ class SchemaLensServiceProvider extends ServiceProvider
                 DependencyGraphCommand::class,
                 PreviewMigrationCommand::class,
                 SafeMigrateCommand::class,
+                SchemaDiffCommand::class,
             ]);
         }
 

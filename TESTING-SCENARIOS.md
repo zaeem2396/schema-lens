@@ -172,6 +172,18 @@ Run `composer check` (Pint, PHPStan, PHPUnit) before release when changing this 
 - [ ] Run: `php artisan schema:graph --path=<empty-directory>` (directory with no .php files)
 - [ ] Verify: "No migration files found" message and non-zero exit code
 
+### 22. Schema diff between environments (`schema:diff`)
+
+Requires two **MySQL** connections in `config/database.php` (e.g. `mysql` and `mysql_staging`). On SQLite-only test apps, rely on package CI for validation.
+
+- [ ] Run: `php artisan schema:diff` (no arguments) — expect error that both connections are required
+- [ ] Run: `php artisan schema:diff unknown_conn mysql` — expect unknown connection error
+- [ ] With two MySQL connections configured, run: `php artisan schema:diff conn_a conn_b` and verify summary output; exit code 1 when schemas differ
+- [ ] Run: `php artisan schema:diff conn_a conn_b --format=json` — JSON includes `from_connection`, `to_connection`, `identical`, `diff`
+- [ ] With schema differences, run: `php artisan schema:diff conn_a conn_b --stubs` — hints contain `Schema::`
+- [ ] Run: `php artisan schema:diff conn_a conn_b --exit-zero` — exit 0 even when schemas differ
+- [ ] Run `composer check` before release when changing this command
+
 ---
 
 ## Edge Cases to Test

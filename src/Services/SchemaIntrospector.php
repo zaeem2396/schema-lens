@@ -2,28 +2,41 @@
 
 namespace Zaeem2396\SchemaLens\Services;
 
+use Illuminate\Database\Connection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class SchemaIntrospector
 {
+    protected ?string $connectionName;
+
     protected string $database;
 
-    public function __construct()
+    public function __construct(?string $connectionName = null)
     {
-        $this->database = DB::connection()->getDatabaseName();
+        $this->connectionName = $connectionName;
+        $this->database = $this->connection()->getDatabaseName();
     }
 
     /**
-     * Ensure the default database driver is MySQL. Schema introspection uses information_schema.
+     * Laravel database connection used for information_schema queries.
+     */
+    protected function connection(): Connection
+    {
+        return DB::connection($this->connectionName);
+    }
+
+    /**
+     * Ensure the database driver is MySQL. Schema introspection uses information_schema.
      *
-     * @throws \RuntimeException if the driver is not mysql
+     * @throws RuntimeException if the driver is not mysql
      */
     protected function ensureMySQLDriver(): void
     {
-        $driver = DB::connection()->getDriverName();
+        $driver = $this->connection()->getDriverName();
         if (strtolower($driver) !== 'mysql') {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'Schema Lens schema introspection requires MySQL. Current driver: '.$driver.'. '
                 .'Use --sql to preview migrations without connecting to the database.'
             );
@@ -37,7 +50,7 @@ class SchemaIntrospector
     {
         $this->ensureMySQLDriver();
 
-        return DB::table('information_schema.tables')
+        return $this->connection()->table('information_schema.tables')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_TYPE', 'BASE TABLE')
             ->pluck('TABLE_NAME');
@@ -63,7 +76,7 @@ class SchemaIntrospector
      */
     public function getColumns(string $tableName): Collection
     {
-        $columns = DB::table('information_schema.columns')
+        $columns = $this->connection()->table('information_schema.columns')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_NAME', $tableName)
             ->orderBy('ORDINAL_POSITION')
@@ -88,7 +101,7 @@ class SchemaIntrospector
      */
     public function getIndexes(string $tableName): Collection
     {
-        $indexes = DB::table('information_schema.statistics')
+        $indexes = $this->connection()->table('information_schema.statistics')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_NAME', $tableName)
             ->orderBy('INDEX_NAME')
@@ -114,7 +127,7 @@ class SchemaIntrospector
      */
     public function getForeignKeys(string $tableName): Collection
     {
-        $foreignKeys = DB::table('information_schema.key_column_usage as kcu')
+        $foreignKeys = $this->connection()->table('information_schema.key_column_usage as kcu')
             ->join('information_schema.referential_constraints as rc', function ($join) {
                 $join->on('kcu.CONSTRAINT_NAME', '=', 'rc.CONSTRAINT_NAME')
                     ->on('kcu.TABLE_SCHEMA', '=', 'rc.CONSTRAINT_SCHEMA');
@@ -153,7 +166,7 @@ class SchemaIntrospector
      */
     public function getTableEngine(string $tableName): ?string
     {
-        $result = DB::table('information_schema.tables')
+        $result = $this->connection()->table('information_schema.tables')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_NAME', $tableName)
             ->value('ENGINE');
@@ -166,7 +179,7 @@ class SchemaIntrospector
      */
     public function getTableCharset(string $tableName): ?string
     {
-        $result = DB::table('information_schema.tables')
+        $result = $this->connection()->table('information_schema.tables')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_NAME', $tableName)
             ->value('TABLE_COLLATION');
@@ -179,7 +192,7 @@ class SchemaIntrospector
      */
     public function getTableCollation(string $tableName): ?string
     {
-        return DB::table('information_schema.tables')
+        return $this->connection()->table('information_schema.tables')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_NAME', $tableName)
             ->value('TABLE_COLLATION');
@@ -190,7 +203,7 @@ class SchemaIntrospector
      */
     public function tableExists(string $tableName): bool
     {
-        return DB::table('information_schema.tables')
+        return $this->connection()->table('information_schema.tables')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_NAME', $tableName)
             ->exists();
@@ -201,7 +214,7 @@ class SchemaIntrospector
      */
     public function columnExists(string $tableName, string $columnName): bool
     {
-        return DB::table('information_schema.columns')
+        return $this->connection()->table('information_schema.columns')
             ->where('TABLE_SCHEMA', $this->database)
             ->where('TABLE_NAME', $tableName)
             ->where('COLUMN_NAME', $columnName)

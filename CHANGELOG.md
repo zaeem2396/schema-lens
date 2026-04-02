@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **`schema:diff`**: Compare MySQL schemas between two Laravel database connections; reports missing/extra tables and columns, type and nullable mismatches; JSON output (`--format=json`); optional migration hints (`--stubs`); exit code 1 when schemas differ unless `--exit-zero`. Documented in README, USAGE.md, and TESTING-SCENARIOS scenario 22.
 - **Laravel 13** support: `illuminate/*` constraints extended to `^13.0`; dev dependency `orchestra/testbench` `^11.0` for tests on Laravel 13. CI runs tests on PHP 8.3+ with Laravel 13.
 
 ## [1.4.1] - 2025-01-27
