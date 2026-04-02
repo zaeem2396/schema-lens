@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Nothing yet.
 
-## [4.6.0] - 2026-04-02
+## [1.6.0] - 2026-04-02
 
 ### Added
 
@@ -25,7 +25,7 @@ Nothing yet.
 - ROADMAP.md: section 1.6 marked implemented; `ROADMAP.md` is tracked in the repository.
 - Composer keywords: `schema-diff`, `environments`.
 
-## [4.5.0] - 2026-03-17
+## [1.5.0] - 2026-03-17
 
 ### Added
 
