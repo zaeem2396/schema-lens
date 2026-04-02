@@ -1,5 +1,7 @@
 # Schema Lens - Complete Usage Guide
 
+Version history and release notes are maintained in [CHANGELOG.md](CHANGELOG.md) (e.g. **v4.5.0** Laravel 13, **v4.6.0** `schema:diff`).
+
 ## Table of Contents
 1. [Installation](#installation)
 2. [Configuration](#configuration)

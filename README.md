@@ -16,6 +16,8 @@
 
 A Laravel package that extends the default Artisan CLI with commands to preview a single migration file against the current MySQL schema before execution. It provides comprehensive schema diff analysis, destructive change detection, automatic data export, and rollback simulation.
 
+**Release highlights:** **v4.6.0** adds `schema:diff` to compare MySQL schemas across two Laravel database connections. **v4.5.0** adds Laravel 13 support. Details: [CHANGELOG.md](CHANGELOG.md).
+
 ## Features
 
 - 🔍 **Schema Diff Analysis**: Compare migration operations against current MySQL schema

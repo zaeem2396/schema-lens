@@ -2,12 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [Unreleased]
+
+Nothing yet.
+
+## [1.6.0] - 2026-04-02
 
 ### Added
 
-- **`schema:diff`**: Compare MySQL schemas between two Laravel database connections; reports missing/extra tables and columns, type and nullable mismatches; JSON output (`--format=json`); optional migration hints (`--stubs`); exit code 1 when schemas differ unless `--exit-zero`. Documented in README, USAGE.md, and TESTING-SCENARIOS scenario 22.
-- **Laravel 13** support: `illuminate/*` constraints extended to `^13.0`; dev dependency `orchestra/testbench` `^11.0` for tests on Laravel 13. CI runs tests on PHP 8.3+ with Laravel 13.
+- **`schema:diff`**: Compare MySQL schemas between two Laravel database connections (`config/database.php` connection names). Reports missing or extra tables and columns, type and nullable mismatches; JSON output via `--format=json`; optional migration-style hints with `--stubs`; exit code **1** when schemas differ unless `--exit-zero`.
+- **`SchemaComparator`**, **`SchemaMigrationStubHint`**, and **`SchemaDiffCommand`**.
+- **`SchemaIntrospector`** accepts an optional named connection for multi-connection introspection.
+
+### Documentation
+
+- README: feature list, usage, exit codes, troubleshooting, and limitations for `schema:diff`.
+- USAGE.md: Advanced Usage — compare schemas between environments; TOC link.
+- TESTING-SCENARIOS.md: scenario 22.
+- `config/schema-lens.php`: comment block for `schema:diff`.
+- ROADMAP.md: section 1.6 marked implemented; `ROADMAP.md` is tracked in the repository.
+- Composer keywords: `schema-diff`, `environments`.
+
+## [1.5.0] - 2026-03-17
+
+### Added
+
+- **Laravel 13** support: `illuminate/support`, `illuminate/database`, `illuminate/console`, and `illuminate/filesystem` constraints include `^13.0`.
+- **Orchestra Testbench** `^11.0` for package development and tests on Laravel 13.
+- CI: Laravel **13.*** matrix on PHP **8.3** and **8.4** (excluded on PHP 8.1 / 8.2 where incompatible).
+
+### Documentation
+
+- README: Laravel 10.x–13.x and PHP 8.3+ note for Laravel 13.
+- `pint.json`: explicit Laravel preset for consistent CI/local Pint behavior.
 
 ## [1.4.1] - 2025-01-27
 

@@ -1,6 +1,6 @@
 # Testing Scenarios Checklist
 
-Quick reference guide for testing Schema Lens in different scenarios.
+Quick reference guide for testing Schema Lens in different scenarios. For shipped versions (e.g. **v4.5.0**, **v4.6.0**), see [CHANGELOG.md](CHANGELOG.md).
 
 ## ✅ Pre-Testing Setup
 
