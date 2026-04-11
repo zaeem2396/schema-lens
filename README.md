@@ -43,6 +43,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 composer require zaeem2396/schema-lens
 php artisan schema:preview database/migrations/your_migration.php
 # Compare two MySQL connections (optional): php artisan schema:diff mysql mysql_staging
+# Optional full SQL backup before safe migrate (MySQL client tools required): php artisan migrate:safe --backup
 ```
 
 📖 **For detailed usage instructions, testing scenarios, and examples, see [USAGE.md](USAGE.md)**
