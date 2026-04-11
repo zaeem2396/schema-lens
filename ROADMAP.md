@@ -1,6 +1,6 @@
 # Schema Lens Roadmap
 
-> **Current Version:** v4.6.0 (release branch)  
+> **Current Version:** v4.7.0 (release branch) · **Composer / tag:** v1.7.0  
 > **Last Updated:** April 2026
 
 This document outlines the planned features and enhancements for Schema Lens. Each feature includes a dedicated git branch name for tracking development progress.
@@ -24,7 +24,7 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 ## Roadmap status overview
 
-**Package line (marketing):** v4.6.0 — see [Changelog](#changelog) for dated entries.  
+**Package line (marketing):** v4.7.0 — see [Changelog](#changelog) for dated entries.  
 **Status legend:** <span style="color:#1a7f37;font-weight:600;">Completed</span> (green) · <span style="color:#bf8700;font-weight:600;">In progress</span> (yellow) · <span style="color:#cf222e;font-weight:600;">Planned</span> (red) *(GitHub and some viewers may strip inline `style`; the words Completed / In progress / Planned remain readable.)*
 
 ### Phase 1 — Core enhancements
@@ -37,7 +37,7 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 | v1.3.0 | **1.4** Configurable SQL engine | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/configurable-sql-engine` |
 | v1.4.x | **1.5** Migration dependency graph (`schema:graph`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/dependency-graph` |
 | v1.6.0 | **1.6** Schema diff between environments | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/schema-diff` |
-| *next* | **1.7** Backup before migration (`migrate:safe --backup`, `schema:restore`) | <span style="color:#bf8700;font-weight:600;">In progress</span> *(implemented; release tag pending)* | `feature/auto-backup` |
+| v1.7.0 | **1.7** Backup before migration (`migrate:safe --backup`, `schema:restore`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/auto-backup` |
 
 ### Phase 2 — Database support expansion
 
@@ -282,11 +282,11 @@ php artisan schema:diff mysql mysql_staging --format=json --stubs
 
 ---
 
-### 1.7 Backup Before Migration ✅ IMPLEMENTED
+### 1.7 Backup Before Migration ✅ COMPLETED
 
 **Branch:** `feature/auto-backup`
 
-**Status:** ✅ Implemented (pending release tag)
+**Status:** ✅ Released in v1.7.0 (docs line v4.7.0)
 
 **Description:**  
 Optional full logical database backup (`mysqldump`) before `migrate:safe` runs, with configurable retention and a non-destructive restore hint command.
@@ -927,6 +927,7 @@ This section merges a **long-term product vision**: evolving from a migration-pr
 | v1.2.0 | High | Dry Run SQL Preview | Medium-High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
 | v1.3.0 | Medium | Configurable SQL Engine | Low | Medium | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
 | v1.6.0 | Medium | Schema Diff | High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
+| v1.7.0 | High | Backup before migration (`migrate:safe --backup`, `schema:restore`) | Medium-High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
 | — | High | PostgreSQL Support | High | High | <span style="color:#cf222e;font-weight:600;">Planned</span> |
 | — | Medium | Performance Analysis | High | Medium | <span style="color:#cf222e;font-weight:600;">Planned</span> |
 | — | Medium | CI/CD Integration | Medium | High | <span style="color:#cf222e;font-weight:600;">Planned</span> |
@@ -958,6 +959,7 @@ git push origin feature/interactive-mode
 
 | Date | Version | Changes |
 |------|---------|---------|
+| Apr 2026 | v4.7.0 | `migrate:safe --backup` / `--backup-path`, `schema-lens.backup` config, `BackupManager` + mysqldump drivers, `schema:restore`; roadmap status tables; scenario 23 |
 | Apr 2026 | v4.6.0 | `schema:diff` — compare MySQL schemas across two Laravel DB connections; JSON and `--stubs`; optional named connection on `SchemaIntrospector`; docs and scenario 22 |
 | Mar 2026 | v4.5.0 | Laravel 13 support (`illuminate/*` ^13, Orchestra Testbench ^11); CI matrix for Laravel 13; README and `pint.json` updates |
 | Jan 2025 | v1.3.0 | Configurable table engine for generated SQL via `schema-lens.sql.engine` / `SCHEMA_LENS_SQL_ENGINE`; falls back to DB connection then InnoDB |
