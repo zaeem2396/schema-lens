@@ -179,6 +179,35 @@ php artisan schema:diff mysql mysql_staging --stubs
 
 Use `--exit-zero` when a shell script should not fail on schema drift (you still get full output). Without it, the command exits with code 1 when any structural difference exists.
 
+### Full database backup (`migrate:safe`)
+
+For a **whole-database** SQL dump (not only row-level exports under `storage/app/schema-lens/exports/`), use the MySQL client `mysqldump` integration:
+
+```bash
+# Always dump before running pending migrations
+php artisan migrate:safe --backup
+
+# Custom output path
+php artisan migrate:safe --backup --backup-path=/var/backups/app-$(date +%F).sql
+```
+
+Enable automatic dumps when destructive changes are detected (still respects `--no-backup`):
+
+```env
+SCHEMA_LENS_BACKUP_AUTO=true
+SCHEMA_LENS_BACKUP_DIRECTORY=app/schema-lens/backups
+SCHEMA_LENS_BACKUP_RETENTION_DAYS=7
+SCHEMA_LENS_MYSQLDUMP_PATH=/usr/bin/mysqldump
+```
+
+`--pretend` does **not** write a dump file. The `spatie` driver value is detected when `spatie/laravel-backup` is installed but currently returns guidance to use `mysqldump` or `backup:run` from that package.
+
+After you have a `.sql` file, **`schema:restore`** prints the suggested `mysql` command (it does not execute it):
+
+```bash
+php artisan schema:restore storage/app/schema-lens/backups/schema-lens-db-2026-04-02_120000.sql
+```
+
 ---
 
 ## Testing Scenarios
