@@ -254,8 +254,10 @@ php artisan migrate:safe
 - `--seed` - Run seeders after migration
 - `--step` - Run migrations one at a time
 - `--pretend` - Dump the SQL queries that would be run
-- `--no-backup` - Skip data backup for destructive changes
+- `--no-backup` - Skip data backup for destructive changes (row exports and full `mysqldump` when applicable)
 - `--interactive` - Confirm each destructive change individually
+- `--backup` - Always create a full database SQL dump via `mysqldump` before migrations (skipped with `--pretend`)
+- `--backup-path=` - Write the dump to this path (otherwise uses `schema-lens.backup.directory`)
 
 This command:
 1. Analyzes all pending migrations for destructive changes
