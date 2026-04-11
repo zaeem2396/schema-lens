@@ -542,6 +542,7 @@ migration-preview:
 - **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
 - **`schema:diff` requires two MySQL connections** — Add both to `config/database.php`; SQLite or other drivers are rejected for this command.
 - **`schema:diff` exits 1 on drift** — Use `--exit-zero` in CI if you only want logs without failing the job.
+- **`mysqldump` not found** — Install MySQL client tools on the host or set `SCHEMA_LENS_MYSQLDUMP_PATH` to the full path of the `mysqldump` binary.
 
 ## Limitations
 
