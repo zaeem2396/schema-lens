@@ -32,6 +32,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - ⚙️ **Configurable SQL engine**: Set table engine (InnoDB, MyISAM, etc.) for generated SQL via config
 - 📊 **Migration Dependency Graph**: Visualize migration dependencies (foreign keys) as ASCII tree or JSON
 - 🔀 **Schema diff between environments**: Compare two MySQL connections (missing tables/columns, type mismatches)
+- 📦 **Full database backup**: Optional `mysqldump` before `migrate:safe` (`--backup`, `--backup-path`, config auto backup and retention)
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
 - 📦 **Versioning**: Automatic versioning of exports with restore metadata
@@ -42,6 +43,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 composer require zaeem2396/schema-lens
 php artisan schema:preview database/migrations/your_migration.php
 # Compare two MySQL connections (optional): php artisan schema:diff mysql mysql_staging
+# Optional full SQL backup before safe migrate (MySQL client tools required): php artisan migrate:safe --backup
 ```
 
 📖 **For detailed usage instructions, testing scenarios, and examples, see [USAGE.md](USAGE.md)**
@@ -84,10 +86,19 @@ return [
     'sql' => [
         'engine' => env('SCHEMA_LENS_SQL_ENGINE'), // e.g. InnoDB, MyISAM; falls back to DB connection engine
     ],
+    'backup' => [
+        'auto' => env('SCHEMA_LENS_BACKUP_AUTO', false),
+        'driver' => env('SCHEMA_LENS_BACKUP_DRIVER', 'mysqldump'),
+        'directory' => env('SCHEMA_LENS_BACKUP_DIRECTORY', 'app/schema-lens/backups'),
+        'retention_days' => (int) env('SCHEMA_LENS_BACKUP_RETENTION_DAYS', 7),
+        'mysqldump_binary' => env('SCHEMA_LENS_MYSQLDUMP_PATH'),
+    ],
 ];
 ```
 
 The **SQL engine** (`schema-lens.sql.engine` or `SCHEMA_LENS_SQL_ENGINE`) is used in generated `CREATE TABLE` statements when using `schema:preview --sql`. If not set, the default database connection's engine is used (typically InnoDB).
+
+The **`backup`** block configures optional logical backups before `migrate:safe` runs: `SCHEMA_LENS_BACKUP_AUTO` runs a dump automatically when destructive changes are detected (unless `--no-backup`), `SCHEMA_LENS_BACKUP_DRIVER` is `mysqldump` (default) or `spatie` (placeholder when `spatie/laravel-backup` is present), `SCHEMA_LENS_BACKUP_DIRECTORY` is relative to `storage_path()`, `SCHEMA_LENS_BACKUP_RETENTION_DAYS` prunes old `schema-lens-db-*.sql` files (0 disables pruning), and `SCHEMA_LENS_MYSQLDUMP_PATH` points to the `mysqldump` binary if it is not on `PATH`.
 
 ## Usage
 
@@ -243,8 +254,10 @@ php artisan migrate:safe
 - `--seed` - Run seeders after migration
 - `--step` - Run migrations one at a time
 - `--pretend` - Dump the SQL queries that would be run
-- `--no-backup` - Skip data backup for destructive changes
+- `--no-backup` - Skip data backup for destructive changes (row exports and full `mysqldump` when applicable)
 - `--interactive` - Confirm each destructive change individually
+- `--backup` - Always create a full database SQL dump via `mysqldump` before migrations (skipped with `--pretend`)
+- `--backup-path=` - Write the dump to this path (otherwise uses `schema-lens.backup.directory`)
 
 This command:
 1. Analyzes all pending migrations for destructive changes
@@ -318,6 +331,28 @@ This prompts you to review each migration with destructive changes individually:
 | `q` | Quit and cancel everything |
 
 Only approved migrations will be executed, giving you full control over which destructive changes to apply.
+
+### Full database backup (`mysqldump`)
+
+In addition to per-table CSV/JSON exports for destructive operations, you can take a **full logical backup** of the default MySQL database before migrations run:
+
+```bash
+php artisan migrate:safe --backup
+php artisan migrate:safe --backup --backup-path=/var/backups/app-pre-migrate.sql
+```
+
+With `SCHEMA_LENS_BACKUP_AUTO=true` (or `schema-lens.backup.auto`), a dump is created automatically when destructive changes are detected, unless you pass `--no-backup`. `--pretend` never writes a dump file.
+
+Dumps default to `storage_path()` + `schema-lens.backup.directory`, with filenames like `schema-lens-db-YYYY-mm-dd_His.sql`. Old files matching `schema-lens-db-*.sql` in that directory are pruned according to `retention_days`.
+
+### Restore hint (`schema:restore`)
+
+Schema Lens does not execute restores for you. After generating a `.sql` file (from this package or any `mysqldump`), print the suggested `mysql` client invocation:
+
+```bash
+php artisan schema:restore /path/to/dump.sql
+php artisan schema:restore storage/app/schema-lens/backups/schema-lens-db-2026-04-02_120000.sql --connection=mysql
+```
 
 ## What It Detects
 
@@ -469,6 +504,11 @@ SCHEMA_LENS_EXPORT_ROW_LIMIT=1000
 SCHEMA_LENS_COMPRESS_EXPORTS=true
 SCHEMA_LENS_OUTPUT_FORMAT=cli
 SCHEMA_LENS_SHOW_LINE_NUMBERS=true
+SCHEMA_LENS_BACKUP_AUTO=false
+SCHEMA_LENS_BACKUP_DRIVER=mysqldump
+SCHEMA_LENS_BACKUP_DIRECTORY=app/schema-lens/backups
+SCHEMA_LENS_BACKUP_RETENTION_DAYS=7
+SCHEMA_LENS_MYSQLDUMP_PATH=
 ```
 
 ## CI/CD Integration
@@ -502,6 +542,7 @@ migration-preview:
 - **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
 - **`schema:diff` requires two MySQL connections** — Add both to `config/database.php`; SQLite or other drivers are rejected for this command.
 - **`schema:diff` exits 1 on drift** — Use `--exit-zero` in CI if you only want logs without failing the job.
+- **`mysqldump` not found** — Install MySQL client tools on the host or set `SCHEMA_LENS_MYSQLDUMP_PATH` to the full path of the `mysqldump` binary.
 
 ## Limitations
 

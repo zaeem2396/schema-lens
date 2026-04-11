@@ -3,6 +3,7 @@
 namespace Zaeem2396\SchemaLens\Commands;
 
 use Illuminate\Console\Command;
+use Zaeem2396\SchemaLens\Services\BackupManager;
 use Zaeem2396\SchemaLens\Services\DataExporter;
 use Zaeem2396\SchemaLens\Services\DestructiveChangeDetector;
 use Zaeem2396\SchemaLens\Services\DiffGenerator;
@@ -18,7 +19,9 @@ class SafeMigrateCommand extends Command
                             {--step : Run migrations one at a time}
                             {--pretend : Dump the SQL queries that would be run}
                             {--no-backup : Skip data backup for destructive changes}
-                            {--interactive : Confirm each destructive change individually}';
+                            {--interactive : Confirm each destructive change individually}
+                            {--backup : Create a full database SQL dump (mysqldump) before running migrations}
+                            {--backup-path= : Write the full dump to this path (defaults to configured backup directory)}';
 
     protected $description = 'Run migrations with automatic destructive change detection and data backup';
 
@@ -32,15 +35,23 @@ class SafeMigrateCommand extends Command
 
     protected DataExporter $exporter;
 
-    public function __construct()
+    protected ?BackupManager $backupManager = null;
+
+    public function __construct(?BackupManager $backupManager = null)
     {
         parent::__construct();
 
+        $this->backupManager = $backupManager;
         $this->introspector = new SchemaIntrospector;
         $this->parser = new MigrationParser;
         $this->diffGenerator = new DiffGenerator($this->introspector);
         $this->detector = new DestructiveChangeDetector;
         $this->exporter = new DataExporter;
+    }
+
+    protected function getBackupManager(): BackupManager
+    {
+        return $this->backupManager ??= new BackupManager;
     }
 
     public function handle(): int
@@ -158,6 +169,25 @@ class SafeMigrateCommand extends Command
             }
         }
 
+        $fullDumpPath = null;
+        if ($this->shouldCreateFullDatabaseBackup($allDestructiveChanges)) {
+            $this->info('📦 Creating full database dump (mysqldump)...');
+            $override = $this->option('backup-path');
+            $path = is_string($override) && $override !== '' ? $override : null;
+            $result = $this->getBackupManager()->createBackup($path);
+            if ($result['success'] !== true) {
+                $message = $result['message'] ?? 'unknown error';
+                $this->error('Database backup failed: '.$message);
+
+                return Command::FAILURE;
+            }
+            $fullDumpPath = $result['path'] ?? null;
+            if ($fullDumpPath !== null) {
+                $this->info('✅ Full database backup: '.$fullDumpPath);
+            }
+            $this->newLine();
+        }
+
         // Run the actual migration
         $this->newLine();
         $this->info('🚀 Running migrations...');
@@ -188,11 +218,34 @@ class SafeMigrateCommand extends Command
             $this->info('✅ Migration completed successfully!');
 
             if (! empty($allDestructiveChanges) && ! $this->option('no-backup')) {
-                $this->info('💾 Your data backups are available in: storage/app/schema-lens/exports/');
+                $this->info('💾 Row-level exports (if any) are under: storage/app/schema-lens/exports/');
+            }
+            if ($fullDumpPath !== null) {
+                $this->info('📦 Full SQL dump: '.$fullDumpPath);
             }
         }
 
         return $exitCode;
+    }
+
+    /**
+     * Whether to run mysqldump (or configured driver) before migrations.
+     *
+     * @param  array<string, array<int, mixed>>  $allDestructiveChanges
+     */
+    protected function shouldCreateFullDatabaseBackup(array $allDestructiveChanges): bool
+    {
+        if ($this->option('pretend')) {
+            return false;
+        }
+        if ($this->option('no-backup')) {
+            return false;
+        }
+        if ($this->option('backup')) {
+            return true;
+        }
+
+        return (bool) config('schema-lens.backup.auto', false) && ! empty($allDestructiveChanges);
     }
 
     /**

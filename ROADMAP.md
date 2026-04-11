@@ -9,6 +9,7 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 ## 📋 Table of Contents
 
+- [Roadmap status overview](#roadmap-status-overview)
 - [What Schema Lens Is Today](#what-schema-lens-is-today)
 - [Phase 1: Core Enhancements](#phase-1-core-enhancements)
 - [Phase 2: Database Support Expansion](#phase-2-database-support-expansion)
@@ -21,6 +22,60 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 ---
 
+## Roadmap status overview
+
+**Package line (marketing):** v4.6.0 — see [Changelog](#changelog) for dated entries.  
+**Status legend:** <span style="color:#1a7f37;font-weight:600;">Completed</span> (green) · <span style="color:#bf8700;font-weight:600;">In progress</span> (yellow) · <span style="color:#cf222e;font-weight:600;">Planned</span> (red) *(GitHub and some viewers may strip inline `style`; the words Completed / In progress / Planned remain readable.)*
+
+### Phase 1 — Core enhancements
+
+| Version | Item | Status | Branch |
+|---------|------|--------|--------|
+| v1.1.0 | **1.1** Interactive mode for destructive changes | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/interactive-mode` |
+| v1.1.1 | **1.2** Single migration file support | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/single-migration` |
+| v1.2.0 | **1.3** Dry run / SQL preview | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/dry-run-sql` |
+| v1.3.0 | **1.4** Configurable SQL engine | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/configurable-sql-engine` |
+| v1.4.x | **1.5** Migration dependency graph (`schema:graph`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/dependency-graph` |
+| v1.6.0 | **1.6** Schema diff between environments | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/schema-diff` |
+| *next* | **1.7** Backup before migration (`migrate:safe --backup`, `schema:restore`) | <span style="color:#bf8700;font-weight:600;">In progress</span> *(implemented; release tag pending)* | `feature/auto-backup` |
+
+### Phase 2 — Database support expansion
+
+| Version | Item | Status | Branch |
+|---------|------|--------|--------|
+| — | **2.1** PostgreSQL support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/postgresql-support` |
+| — | **2.2** SQLite support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/sqlite-support` |
+| — | **2.3** SQL Server support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/sqlserver-support` |
+
+### Phase 3 — Advanced analysis
+
+| Version | Item | Status | Branch |
+|---------|------|--------|--------|
+| — | **3.1** Performance impact analysis | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/performance-analysis` |
+| — | **3.2** Data loss estimation | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/data-loss-estimation` |
+| — | **3.3** Index optimization suggestions | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/index-suggestions` |
+| — | **3.4** Schema health check | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/schema-health` |
+
+### Phase 4 — Developer experience
+
+| Version | Item | Status | Branch |
+|---------|------|--------|--------|
+| — | **4.1** Laravel Tinker integration | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/tinker-integration` |
+| — | **4.2** VS Code / JSON schema support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/vscode-json-schema` |
+| — | **4.3** Web dashboard (optional package) | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/web-dashboard` |
+| — | **4.4** Better error messages & suggestions | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/better-errors` |
+
+### Phase 5 — Integration & ecosystem
+
+| Version | Item | Status | Branch |
+|---------|------|--------|--------|
+| — | **5.1** CI/CD pipeline integration | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/cicd-integration` |
+| — | **5.2** Slack / Discord notifications | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/notifications` |
+| — | **5.3** Spatie Laravel Backup (deep integration) | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/spatie-backup` |
+| — | **5.4** Laravel Telescope integration | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/telescope-integration` |
+
+---
+
 ## What Schema Lens Is Today
 
 Schema Lens is a **migration preview and safe-migration** package for Laravel:
@@ -29,6 +84,7 @@ Schema Lens is a **migration preview and safe-migration** package for Laravel:
 - **✅ Migration parsing** — `MigrationParser`: extracts operations from migration files (create, drop, add column, etc.)
 - **✅ Destructive change detection** — Flags dangerous operations and risk levels
 - **✅ Data export** — CSV/JSON backup of affected data before destructive changes
+- **✅ Full database backup (optional)** — `migrate:safe --backup` / config auto backup via `mysqldump`; `schema:restore` prints restore hints
 - **✅ SQL preview** — Generate executable SQL from migrations (`--sql`, configurable engine)
 - **✅ Structured output** — CLI and JSON formatters; config-driven behavior
 - **✅ Laravel package skeleton** — Service provider, config, Artisan commands
@@ -226,35 +282,42 @@ php artisan schema:diff mysql mysql_staging --format=json --stubs
 
 ---
 
-### 1.7 Backup Before Migration
+### 1.7 Backup Before Migration ✅ IMPLEMENTED
 
 **Branch:** `feature/auto-backup`
 
+**Status:** ✅ Implemented (pending release tag)
+
 **Description:**  
-Automatically create a database backup before running migrations with destructive changes. Integrate with popular backup tools.
+Optional full logical database backup (`mysqldump`) before `migrate:safe` runs, with configurable retention and a non-destructive restore hint command.
 
 **Features:**
-- Automatic backup trigger on destructive migrations
-- Configurable backup drivers (mysqldump, spatie/laravel-backup)
-- Backup retention policies
-- Quick restore command
+- `--backup` / `--backup-path` on `migrate:safe`; optional automatic dump when `schema-lens.backup.auto` is true and destructive changes exist
+- Drivers: `mysqldump` (default); `spatie` reserved for host apps with `spatie/laravel-backup` (guidance-only until deeper integration)
+- Retention pruning for `schema-lens-db-*.sql` in the configured backup directory
+- `schema:restore` prints suggested `mysql` invocation (does not run restore)
 
 **Implementation Details:**
 ```php
 // Example usage
 php artisan migrate:safe --backup
-php artisan migrate:safe --backup --backup-path=/backups
+php artisan migrate:safe --backup --backup-path=/backups/pre-migrate.sql
+php artisan schema:restore /backups/pre-migrate.sql
 
-// Config option
-'auto_backup' => true,
-'backup_driver' => 'mysqldump', // or 'spatie'
-'backup_retention_days' => 7,
+// Config (see config/schema-lens.php → backup)
+'schema-lens.backup.auto' => env('SCHEMA_LENS_BACKUP_AUTO', false),
+'schema-lens.backup.driver' => env('SCHEMA_LENS_BACKUP_DRIVER', 'mysqldump'),
+'schema-lens.backup.retention_days' => (int) env('SCHEMA_LENS_BACKUP_RETENTION_DAYS', 7),
 ```
 
-**Files to create:**
+**Files:**
 - `src/Services/BackupManager.php`
 - `src/Drivers/MysqldumpBackupDriver.php`
 - `src/Drivers/SpatieBackupDriver.php`
+- `src/Contracts/BackupDriverInterface.php`
+- `src/DataTransferObjects/BackupResult.php`
+- `src/Commands/SafeMigrateCommand.php` (integration)
+- `src/Commands/SchemaRestoreCommand.php`
 
 **Estimated Effort:** Medium-High
 
@@ -857,18 +920,18 @@ This section merges a **long-term product vision**: evolving from a migration-pr
 
 ## Priority Matrix
 
-| Priority | Feature | Effort | Impact | Status |
-|----------|---------|--------|--------|--------|
-| ✅ Done | Interactive Mode | Medium | High | v1.1.0 |
-| ✅ Done | Single Migration File | Low | High | v1.1.1 |
-| ✅ Done | Dry Run SQL Preview | Medium-High | High | v1.2.0 |
-| ✅ Done | Configurable SQL Engine | Low | Medium | v1.3.0 |
-| 🔴 High | PostgreSQL Support | High | High | Planned |
-| 🟡 Medium | Schema Diff | High | High | ✅ Implemented |
-| 🟡 Medium | Performance Analysis | High | Medium | Planned |
-| 🟡 Medium | CI/CD Integration | Medium | High | Planned |
-| 🟢 Low | Web Dashboard | Very High | Medium | Planned |
-| 🟢 Low | AI Suggestions | High | Medium | Future |
+| Version | Priority | Feature | Effort | Impact | Status |
+|---------|----------|---------|--------|--------|--------|
+| v1.1.0 | High | Interactive Mode | Medium | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
+| v1.1.1 | High | Single Migration File | Low | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
+| v1.2.0 | High | Dry Run SQL Preview | Medium-High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
+| v1.3.0 | Medium | Configurable SQL Engine | Low | Medium | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
+| v1.6.0 | Medium | Schema Diff | High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
+| — | High | PostgreSQL Support | High | High | <span style="color:#cf222e;font-weight:600;">Planned</span> |
+| — | Medium | Performance Analysis | High | Medium | <span style="color:#cf222e;font-weight:600;">Planned</span> |
+| — | Medium | CI/CD Integration | Medium | High | <span style="color:#cf222e;font-weight:600;">Planned</span> |
+| — | Low | Web Dashboard | Very High | Medium | <span style="color:#cf222e;font-weight:600;">Planned</span> |
+| — | Low | AI Suggestions | High | Medium | <span style="color:#cf222e;font-weight:600;">Future</span> |
 
 ---
 

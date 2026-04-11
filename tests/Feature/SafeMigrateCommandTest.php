@@ -133,6 +133,24 @@ class SafeMigrateCommandTest extends TestCase
     }
 
     /** @test */
+    public function command_has_backup_option(): void
+    {
+        $command = $this->app->make(SafeMigrateCommand::class);
+        $definition = $command->getDefinition();
+
+        $this->assertTrue($definition->hasOption('backup'));
+    }
+
+    /** @test */
+    public function command_has_backup_path_option(): void
+    {
+        $command = $this->app->make(SafeMigrateCommand::class);
+        $definition = $command->getDefinition();
+
+        $this->assertTrue($definition->hasOption('backup-path'));
+    }
+
+    /** @test */
     public function interactive_option_has_correct_description(): void
     {
         $command = $this->app->make(SafeMigrateCommand::class);

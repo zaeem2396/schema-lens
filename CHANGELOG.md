@@ -6,7 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **`migrate:safe --backup` / `--backup-path`**: optional full MySQL logical backup via `mysqldump` before migrations; skipped for `--pretend` and when `--no-backup` is set.
+- **Config `schema-lens.backup`**: `auto`, `driver` (`mysqldump` or `spatie` placeholder), `directory`, `retention_days`, `mysqldump_binary` with matching `SCHEMA_LENS_*` / `SCHEMA_LENS_MYSQLDUMP_PATH` environment variables.
+- **`BackupManager`**, **`MysqldumpBackupDriver`**, **`SpatieBackupDriver`**, **`BackupDriverInterface`**, **`BackupResult`**.
+- **`schema:restore`**: prints a suggested `mysql` CLI restore command for a `.sql` dump (does not execute restore); paths may be absolute or relative to the application base path.
+
+### Documentation
+
+- README, USAGE.md, TESTING-SCENARIOS.md (scenario 23), and ROADMAP §1.7 updated for backup-before-migration behavior.
 
 ## [1.6.0] - 2026-04-02
 

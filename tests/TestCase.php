@@ -63,6 +63,11 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('schema-lens.export.compress', false);
         $app['config']->set('schema-lens.output.format', 'cli');
         $app['config']->set('schema-lens.output.show_line_numbers', true);
+        $app['config']->set('schema-lens.backup.auto', false);
+        $app['config']->set('schema-lens.backup.driver', 'mysqldump');
+        $app['config']->set('schema-lens.backup.directory', 'app/schema-lens/backups');
+        $app['config']->set('schema-lens.backup.retention_days', 7);
+        $app['config']->set('schema-lens.backup.mysqldump_binary', null);
     }
 
     /**

@@ -65,4 +65,30 @@ return [
     | Both connections must use the mysql driver.
     |
     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Full database backup (`migrate:safe --backup`)
+    |--------------------------------------------------------------------------
+    |
+    | Optional mysqldump-based logical backup before migrations. Use with care in production.
+    |
+    */
+
+    'backup' => [
+        // When true, create a full dump automatically if destructive changes are detected (unless --no-backup)
+        'auto' => env('SCHEMA_LENS_BACKUP_AUTO', false),
+
+        // mysqldump (default) or spatie (requires spatie/laravel-backup; see driver implementation)
+        'driver' => env('SCHEMA_LENS_BACKUP_DRIVER', 'mysqldump'),
+
+        // Directory under storage_path() for SQL dumps (filename pattern schema-lens-db-*.sql)
+        'directory' => env('SCHEMA_LENS_BACKUP_DIRECTORY', 'app/schema-lens/backups'),
+
+        // Delete matching dumps older than this many days (0 disables pruning)
+        'retention_days' => (int) env('SCHEMA_LENS_BACKUP_RETENTION_DAYS', 7),
+
+        // Absolute path to mysqldump binary if not on PATH
+        'mysqldump_binary' => env('SCHEMA_LENS_MYSQLDUMP_PATH'),
+    ],
 ];

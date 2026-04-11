@@ -184,6 +184,17 @@ Requires two **MySQL** connections in `config/database.php` (e.g. `mysql` and `m
 - [ ] Run: `php artisan schema:diff conn_a conn_b --exit-zero` — exit 0 even when schemas differ
 - [ ] Run `composer check` before release when changing this command
 
+### 23. Full database backup (`migrate:safe --backup`)
+
+Requires **MySQL or MariaDB**, the `mysqldump` binary on the server (or `SCHEMA_LENS_MYSQLDUMP_PATH`), and pending migrations to analyze.
+
+- [ ] Run: `php artisan migrate:safe --help` — verify `--backup` and `--backup-path` appear
+- [ ] With a disposable database, run: `php artisan migrate:safe --backup` — expect a `schema-lens-db-*.sql` file under `storage/` + configured `backup.directory`; command fails clearly if `mysqldump` is missing
+- [ ] Run with `SCHEMA_LENS_BACKUP_AUTO=true` and a migration that drops a column — expect a dump after confirmation unless `--no-backup`
+- [ ] Run: `php artisan migrate:safe --pretend --backup` — no dump file should be written
+- [ ] Run: `php artisan schema:restore /path/to/dump.sql` — output contains a `mysql ... <` style hint; command does not execute restore
+- [ ] Run `composer check` before release when changing backup behavior
+
 ---
 
 ## Edge Cases to Test
