@@ -332,6 +332,28 @@ This prompts you to review each migration with destructive changes individually:
 
 Only approved migrations will be executed, giving you full control over which destructive changes to apply.
 
+### Full database backup (`mysqldump`)
+
+In addition to per-table CSV/JSON exports for destructive operations, you can take a **full logical backup** of the default MySQL database before migrations run:
+
+```bash
+php artisan migrate:safe --backup
+php artisan migrate:safe --backup --backup-path=/var/backups/app-pre-migrate.sql
+```
+
+With `SCHEMA_LENS_BACKUP_AUTO=true` (or `schema-lens.backup.auto`), a dump is created automatically when destructive changes are detected, unless you pass `--no-backup`. `--pretend` never writes a dump file.
+
+Dumps default to `storage_path()` + `schema-lens.backup.directory`, with filenames like `schema-lens-db-YYYY-mm-dd_His.sql`. Old files matching `schema-lens-db-*.sql` in that directory are pruned according to `retention_days`.
+
+### Restore hint (`schema:restore`)
+
+Schema Lens does not execute restores for you. After generating a `.sql` file (from this package or any `mysqldump`), print the suggested `mysql` client invocation:
+
+```bash
+php artisan schema:restore /path/to/dump.sql
+php artisan schema:restore storage/app/schema-lens/backups/schema-lens-db-2026-04-02_120000.sql --connection=mysql
+```
+
 ## What It Detects
 
 ### Schema Changes
