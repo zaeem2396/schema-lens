@@ -32,6 +32,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - ⚙️ **Configurable SQL engine**: Set table engine (InnoDB, MyISAM, etc.) for generated SQL via config
 - 📊 **Migration Dependency Graph**: Visualize migration dependencies (foreign keys) as ASCII tree or JSON
 - 🔀 **Schema diff between environments**: Compare two MySQL connections (missing tables/columns, type mismatches)
+- 📦 **Full database backup**: Optional `mysqldump` before `migrate:safe` (`--backup`, `--backup-path`, config auto backup and retention)
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
 - 📦 **Versioning**: Automatic versioning of exports with restore metadata
