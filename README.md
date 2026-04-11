@@ -86,10 +86,19 @@ return [
     'sql' => [
         'engine' => env('SCHEMA_LENS_SQL_ENGINE'), // e.g. InnoDB, MyISAM; falls back to DB connection engine
     ],
+    'backup' => [
+        'auto' => env('SCHEMA_LENS_BACKUP_AUTO', false),
+        'driver' => env('SCHEMA_LENS_BACKUP_DRIVER', 'mysqldump'),
+        'directory' => env('SCHEMA_LENS_BACKUP_DIRECTORY', 'app/schema-lens/backups'),
+        'retention_days' => (int) env('SCHEMA_LENS_BACKUP_RETENTION_DAYS', 7),
+        'mysqldump_binary' => env('SCHEMA_LENS_MYSQLDUMP_PATH'),
+    ],
 ];
 ```
 
 The **SQL engine** (`schema-lens.sql.engine` or `SCHEMA_LENS_SQL_ENGINE`) is used in generated `CREATE TABLE` statements when using `schema:preview --sql`. If not set, the default database connection's engine is used (typically InnoDB).
+
+The **`backup`** block configures optional logical backups before `migrate:safe` runs: `SCHEMA_LENS_BACKUP_AUTO` runs a dump automatically when destructive changes are detected (unless `--no-backup`), `SCHEMA_LENS_BACKUP_DRIVER` is `mysqldump` (default) or `spatie` (placeholder when `spatie/laravel-backup` is present), `SCHEMA_LENS_BACKUP_DIRECTORY` is relative to `storage_path()`, `SCHEMA_LENS_BACKUP_RETENTION_DAYS` prunes old `schema-lens-db-*.sql` files (0 disables pruning), and `SCHEMA_LENS_MYSQLDUMP_PATH` points to the `mysqldump` binary if it is not on `PATH`.
 
 ## Usage
 
