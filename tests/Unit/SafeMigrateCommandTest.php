@@ -38,6 +38,8 @@ class SafeMigrateCommandTest extends TestCase
             'pretend',
             'no-backup',
             'interactive',
+            'backup',
+            'backup-path',
         ];
 
         foreach ($expectedOptions as $option) {
