@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.7.0] - 2026-04-03
+
 ### Added
 
 - **`migrate:safe --backup` / `--backup-path`**: optional full MySQL logical backup via `mysqldump` before migrations; skipped for `--pretend` and when `--no-backup` is set.
@@ -15,7 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Documentation
 
-- README, USAGE.md, TESTING-SCENARIOS.md (scenario 23), and ROADMAP §1.7 updated for backup-before-migration behavior.
+- README, USAGE.md, TESTING-SCENARIOS.md (scenario 23), ROADMAP §1.7, and the roadmap status overview for backup-before-migration and release alignment.
+
+Before tagging v1.7.0: run `composer check` (Pint, PHPStan, PHPUnit).
 
 ## [1.6.0] - 2026-04-02
 

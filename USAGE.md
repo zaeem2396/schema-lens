@@ -1,6 +1,6 @@
 # Schema Lens - Complete Usage Guide
 
-Version history and release notes are maintained in [CHANGELOG.md](CHANGELOG.md) (e.g. **v4.5.0** Laravel 13, **v4.6.0** `schema:diff`).
+Version history and release notes are maintained in [CHANGELOG.md](CHANGELOG.md) (e.g. **v4.5.0** Laravel 13, **v4.6.0** `schema:diff`, **v4.7.0** backup before migration).
 
 ## Table of Contents
 1. [Installation](#installation)
