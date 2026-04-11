@@ -618,6 +618,10 @@ php artisan schema:preview database/migrations/destructive_migration.php
 
 # Check exports
 ls -lh storage/app/schema-lens/exports/
+
+# Optional: full mysqldump before applying migrations (MySQL / MariaDB + client tools)
+php artisan migrate:safe --backup
+# Or set SCHEMA_LENS_BACKUP_AUTO=true so a dump runs when destructive changes are detected
 ```
 
 ### Use Case 4: Migration Validation in CI/CD
