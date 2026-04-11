@@ -13,7 +13,9 @@
         "artisan",
         "cli",
         "schema-diff",
-        "environments"
+        "environments",
+        "mysqldump",
+        "database-backup"
     ],
     "type": "library",
     "license": "MIT",

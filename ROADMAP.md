@@ -29,6 +29,7 @@ Schema Lens is a **migration preview and safe-migration** package for Laravel:
 - **✅ Migration parsing** — `MigrationParser`: extracts operations from migration files (create, drop, add column, etc.)
 - **✅ Destructive change detection** — Flags dangerous operations and risk levels
 - **✅ Data export** — CSV/JSON backup of affected data before destructive changes
+- **✅ Full database backup (optional)** — `migrate:safe --backup` / config auto backup via `mysqldump`; `schema:restore` prints restore hints
 - **✅ SQL preview** — Generate executable SQL from migrations (`--sql`, configurable engine)
 - **✅ Structured output** — CLI and JSON formatters; config-driven behavior
 - **✅ Laravel package skeleton** — Service provider, config, Artisan commands
@@ -226,35 +227,42 @@ php artisan schema:diff mysql mysql_staging --format=json --stubs
 
 ---
 
-### 1.7 Backup Before Migration
+### 1.7 Backup Before Migration ✅ IMPLEMENTED
 
 **Branch:** `feature/auto-backup`
 
+**Status:** ✅ Implemented (pending release tag)
+
 **Description:**  
-Automatically create a database backup before running migrations with destructive changes. Integrate with popular backup tools.
+Optional full logical database backup (`mysqldump`) before `migrate:safe` runs, with configurable retention and a non-destructive restore hint command.
 
 **Features:**
-- Automatic backup trigger on destructive migrations
-- Configurable backup drivers (mysqldump, spatie/laravel-backup)
-- Backup retention policies
-- Quick restore command
+- `--backup` / `--backup-path` on `migrate:safe`; optional automatic dump when `schema-lens.backup.auto` is true and destructive changes exist
+- Drivers: `mysqldump` (default); `spatie` reserved for host apps with `spatie/laravel-backup` (guidance-only until deeper integration)
+- Retention pruning for `schema-lens-db-*.sql` in the configured backup directory
+- `schema:restore` prints suggested `mysql` invocation (does not run restore)
 
 **Implementation Details:**
 ```php
 // Example usage
 php artisan migrate:safe --backup
-php artisan migrate:safe --backup --backup-path=/backups
+php artisan migrate:safe --backup --backup-path=/backups/pre-migrate.sql
+php artisan schema:restore /backups/pre-migrate.sql
 
-// Config option
-'auto_backup' => true,
-'backup_driver' => 'mysqldump', // or 'spatie'
-'backup_retention_days' => 7,
+// Config (see config/schema-lens.php → backup)
+'schema-lens.backup.auto' => env('SCHEMA_LENS_BACKUP_AUTO', false),
+'schema-lens.backup.driver' => env('SCHEMA_LENS_BACKUP_DRIVER', 'mysqldump'),
+'schema-lens.backup.retention_days' => (int) env('SCHEMA_LENS_BACKUP_RETENTION_DAYS', 7),
 ```
 
-**Files to create:**
+**Files:**
 - `src/Services/BackupManager.php`
 - `src/Drivers/MysqldumpBackupDriver.php`
 - `src/Drivers/SpatieBackupDriver.php`
+- `src/Contracts/BackupDriverInterface.php`
+- `src/DataTransferObjects/BackupResult.php`
+- `src/Commands/SafeMigrateCommand.php` (integration)
+- `src/Commands/SchemaRestoreCommand.php`
 
 **Estimated Effort:** Medium-High
 
