@@ -17,7 +17,7 @@ class SchemaIntrospectorTest extends TestCase
         }
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Schema Lens schema introspection requires MySQL');
+        $this->expectExceptionMessage('Schema Lens schema introspection requires MySQL, MariaDB, or PostgreSQL');
 
         $introspector = new SchemaIntrospector;
         $introspector->getTables();
