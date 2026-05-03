@@ -27,9 +27,9 @@ class SchemaDiffCommandTest extends TestCase
     }
 
     /** @test */
-    public function it_fails_when_connection_is_not_mysql(): void
+    public function it_fails_when_connection_driver_is_not_supported(): void
     {
-        $conn = 'schema_lens_sqlite_non_mysql';
+        $conn = 'schema_lens_sqlite_non_supported';
         Config::set("database.connections.{$conn}", [
             'driver' => 'sqlite',
             'database' => ':memory:',
@@ -41,6 +41,32 @@ class SchemaDiffCommandTest extends TestCase
             'to' => $conn,
         ])
             ->assertFailed()
-            ->expectsOutputToContain('mysql driver');
+            ->expectsOutputToContain('must use mysql, mariadb, or pgsql');
+    }
+
+    /** @test */
+    public function it_fails_when_connections_use_incompatible_driver_families(): void
+    {
+        Config::set('database.connections.schema_lens_mysql_side', [
+            'driver' => 'mysql',
+            'host' => '127.0.0.1',
+            'database' => 'x',
+            'username' => 'x',
+            'password' => 'x',
+        ]);
+        Config::set('database.connections.schema_lens_pgsql_side', [
+            'driver' => 'pgsql',
+            'host' => '127.0.0.1',
+            'database' => 'x',
+            'username' => 'x',
+            'password' => 'x',
+        ]);
+
+        $this->artisan('schema:diff', [
+            'from' => 'schema_lens_mysql_side',
+            'to' => 'schema_lens_pgsql_side',
+        ])
+            ->assertFailed()
+            ->expectsOutputToContain('same driver family');
     }
 }
