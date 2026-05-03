@@ -5,7 +5,7 @@ namespace Zaeem2396\SchemaLens\Services;
 use Illuminate\Support\Collection;
 
 /**
- * Compare two MySQL schemas (from SchemaIntrospector::getCurrentSchema()).
+ * Compare two schemas (from SchemaIntrospector::getCurrentSchema()) for the same driver family.
  *
  * Direction: "from" is the reference (e.g. local); "to" is the target (e.g. production).
  * missing_tables_in_to = present in from, absent in to.
