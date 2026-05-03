@@ -325,35 +325,41 @@ php artisan schema:restore /backups/pre-migrate.sql
 
 ## Phase 2: Database Support Expansion
 
-### 2.1 PostgreSQL Support
+### 2.1 PostgreSQL Support ✅ IMPLEMENTED
 
 **Branch:** `feature/postgresql-support`
 
+**Status:** ✅ Implemented *(pending semver / marketing release tag)* — Core introspection, `schema:diff` for paired `pgsql` connections, and rollback hint SQL parity for Postgres; `--sql` / `SqlGenerator` output remains primarily MySQL-flavored until a dialect switch is introduced.
+
 **Description:**  
-Extend schema introspection and analysis to support PostgreSQL databases.
+Extend schema introspection so PostgreSQL applications can run `schema:preview`, `migrate:safe`, and `schema:diff` against real databases.
 
 **Features:**
-- PostgreSQL `information_schema` queries
-- PostgreSQL-specific data types handling
-- Sequence and serial column detection
-- PostgreSQL-specific destructive change detection
+- **`PostgresInformationSchemaDriver`**: catalogs, columns, FKs via `information_schema`; indexes via `pg_index` aggregation
+- **Type normalization** via `PostgresColumnTypeFormatter` (including `nextval`/serial placeholders in `extra`)
+- **`schema:diff`**: paired `pgsql` connections (same-driver rule as MySQL pairs)
+- **`RollbackSimulator`**: Postgres-aware FK discovery and rollback hint DDL (quoted identifiers, `DROP CONSTRAINT`, `DROP INDEX`)
+
+**Still planned / Phase 2+:** fuller multi-schema search_path, Postgres-specific destructive heuristics, `pg_dump` backup driver parity with `migrate:safe --backup`, and Postgres-targeted **`--sql`** output.
 
 **Implementation Details:**
 ```php
-// Auto-detection based on connection driver
-// Works with existing commands
+// Auto-detection via connection driver → MySqlInformationSchemaDriver vs PostgresInformationSchemaDriver
+$new = new SchemaIntrospector(); // resolves from default connection (mysql, mariadb, or pgsql)
 
-// PostgreSQL-specific considerations:
-// - Sequences for auto-increment
-// - Array types
-// - JSON/JSONB distinction
-// - Schema namespaces
+// PostgreSQL connections should set `'schema' => env('DB_SCHEMA','public')` when not using Laravel defaults.
+
+php artisan schema:diff pgsql_a pgsql_b
 ```
 
-**Files to modify/create:**
-- `src/Services/SchemaIntrospector.php` (modify)
-- `src/Drivers/PostgresSchemaDriver.php` (new)
-- `src/Drivers/SchemaDriverInterface.php` (new)
+**Files:**
+- `src/Contracts/SchemaIntrospectionDriverContract.php`
+- `src/Services/Introspection/MySqlInformationSchemaDriver.php`
+- `src/Services/Introspection/PostgresInformationSchemaDriver.php`
+- `src/Services/Introspection/PostgresColumnTypeFormatter.php`
+- `src/Services/SchemaIntrospector.php`
+- `src/Services/RollbackSimulator.php`
+- `src/Commands/SchemaDiffCommand.php`
 
 **Estimated Effort:** High
 
