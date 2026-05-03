@@ -6,7 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **PostgreSQL schema introspection** via `SchemaIntrospector`: tables, columns, indexes (`pg_catalog` / `information_schema`), and foreign keys scoped to the connection `schema` (default `public`).
+- **`MySqlInformationSchemaDriver`** and **`PostgresInformationSchemaDriver`** implementing **`SchemaIntrospectionDriverContract`**.
+- **`PostgresColumnTypeFormatter`** normalizes Postgres catalog types (`varchar`, `timestamptz`, `nextval`-style extras) toward stable display strings used by **`SchemaComparator`**.
+- **`schema:diff`** supports **paired `pgsql` connections** (still requires both connections to share the same driver family as before for MySQL pairs).
+- **`RollbackSimulator`** uses the introspector’s connection for dependency discovery and emits **PostgreSQL-flavored rollback hint SQL** (`DROP CONSTRAINT`, `"quoted"` identifiers) when introspection runs on Postgres.
+
+### CI
+
+- Optional **PostgreSQL 16** job (`DB_CONNECTION=pgsql`, `pdo_pgsql`) running the PHPUnit suite with live catalog smoke tests (`PostgreSQLSchemaIntrospectionTest`).
+
+### Documentation
+
+- README requirements, troubleshooting, limitations, `config/schema-lens.php` diff comment block, ROADMAP §2.1, USAGE, and TESTING-SCENARIOS updated for Postgres support.
 
 ## [1.7.0] - 2026-04-03
 
