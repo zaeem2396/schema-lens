@@ -10,9 +10,8 @@ use Zaeem2396\SchemaLens\Tests\TestCase;
 /**
  * PreviewMigrationCommand feature tests.
  *
- * Note: These tests require MySQL because the command uses SchemaIntrospector
- * which queries MySQL's information_schema tables. Tests will be skipped
- * if not running on MySQL.
+ * Note: This suite skips unless `skipIfNotMySQL()` passes (fixtures target MySQL).
+ * PostgreSQL coverage lives in CI via `PostgreSQLSchemaIntrospectionTest` plus driver unit tests.
  */
 class PreviewMigrationCommandTest extends TestCase
 {
