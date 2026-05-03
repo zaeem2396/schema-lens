@@ -46,9 +46,22 @@ abstract class TestCase extends BaseTestCase
                 'collation' => 'utf8mb4_unicode_ci',
                 'prefix' => '',
             ]);
+        } elseif ($dbConnection === 'pgsql') {
+            $app['config']->set('database.default', 'testing');
+            $app['config']->set('database.connections.testing', [
+                'driver' => 'pgsql',
+                'host' => env('DB_HOST', '127.0.0.1'),
+                'port' => env('DB_PORT', '5432'),
+                'database' => env('DB_DATABASE', 'testing'),
+                'username' => env('DB_USERNAME', 'postgres'),
+                'password' => env('DB_PASSWORD', 'postgres'),
+                'charset' => 'utf8',
+                'prefix' => '',
+                'schema' => env('DB_SCHEMA', 'public'),
+            ]);
         } else {
             // Use SQLite in-memory for local testing
-            // Note: MySQL tests require information_schema which SQLite doesn't have
+            // SQLite cannot run SchemaIntrospector full preview (no catalog introspection parity)
             $app['config']->set('database.default', 'testing');
             $app['config']->set('database.connections.testing', [
                 'driver' => 'sqlite',
@@ -100,8 +113,27 @@ abstract class TestCase extends BaseTestCase
     {
         if (! $this->isMySQL()) {
             $this->markTestSkipped(
-                'This test requires MySQL. SchemaIntrospector uses information_schema which is MySQL-specific.'
+                'This test requires MySQL/MariaDB for this scenario (use DB_CONNECTION=mysql in CI).'
             );
+        }
+    }
+
+    /**
+     * Whether the active testbench connection uses PostgreSQL.
+     */
+    protected function isPostgreSQL(): bool
+    {
+        try {
+            return $this->app['db']->connection()->getDriverName() === 'pgsql';
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    protected function skipIfNotPostgreSQL(): void
+    {
+        if (! $this->isPostgreSQL()) {
+            $this->markTestSkipped('This test requires PostgreSQL (DB_CONNECTION=pgsql).');
         }
     }
 }
