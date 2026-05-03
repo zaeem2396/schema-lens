@@ -43,7 +43,7 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 | Version | Item | Status | Branch |
 |---------|------|--------|--------|
-| — | **2.1** PostgreSQL support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/postgresql-support` |
+| *next* | **2.1** PostgreSQL support (introspection, `schema:diff`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> *(pending release)* | `feature/postgresql-support` |
 | — | **2.2** SQLite support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/sqlite-support` |
 | — | **2.3** SQL Server support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/sqlserver-support` |
 
