@@ -3,7 +3,8 @@
 namespace Zaeem2396\SchemaLens\Services;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Zaeem2396\SchemaLens\Services\Introspection\MySqlInformationSchemaDriver;
+use Zaeem2396\SchemaLens\Services\Introspection\PostgresInformationSchemaDriver;
 
 class RollbackSimulator
 {
@@ -122,18 +123,32 @@ class RollbackSimulator
             return [];
         }
 
-        $referencing = DB::table('information_schema.key_column_usage as kcu')
+        $conn = $this->introspector->getConnection();
+        $driver = strtolower($conn->getDriverName());
+
+        $query = $conn->table('information_schema.key_column_usage as kcu')
             ->join('information_schema.referential_constraints as rc', function ($join) {
                 $join->on('kcu.constraint_name', '=', 'rc.constraint_name')
-                    ->on('kcu.table_schema', '=', 'rc.constraint_schema');
+                    ->on('kcu.constraint_catalog', '=', 'rc.constraint_catalog')
+                    ->on('kcu.constraint_schema', '=', 'rc.constraint_schema');
             })
-            ->where('kcu.referenced_table_schema', DB::connection()->getDatabaseName())
-            ->where('kcu.referenced_table_name', $tableName)
-            ->distinct()
+            ->whereNotNull('kcu.referenced_table_name')
+            ->whereRaw('LOWER(kcu.referenced_table_name) = ?', [strtolower($tableName)]);
+
+        if (PostgresInformationSchemaDriver::supports($driver)) {
+            $schema = (string) ($conn->getConfig('schema') ?? 'public');
+            $query->where('kcu.referenced_table_catalog', $conn->getDatabaseName())
+                ->whereRaw('LOWER(kcu.referenced_table_schema) = ?', [strtolower($schema)]);
+        } elseif (MySqlInformationSchemaDriver::supports($driver)) {
+            $query->where('kcu.referenced_table_schema', $conn->getDatabaseName())
+                ->where('kcu.referenced_table_name', $tableName);
+        } else {
+            return [];
+        }
+
+        return $query->distinct()
             ->pluck('kcu.table_name')
             ->toArray();
-
-        return $referencing;
     }
 
     /**
@@ -168,39 +183,77 @@ class RollbackSimulator
      */
     protected function generateSqlForOperation(string $type, string $action, array $data): ?string
     {
+        $pg = $this->introspector->isPostgreSql();
+
         switch ($type) {
             case 'table':
                 if ($action === 'drop') {
-                    return "DROP TABLE IF EXISTS `{$data['table']}`;";
+                    $t = $this->quoteTable($data['table'] ?? '', $pg);
+
+                    return $pg
+                        ? "DROP TABLE IF EXISTS {$t};"
+                        : "DROP TABLE IF EXISTS {$t};";
                 }
                 break;
 
             case 'column':
                 if ($action === 'drop') {
-                    return "ALTER TABLE `{$data['table']}` DROP COLUMN `{$data['column']}`;";
+                    $t = $this->quoteTable($data['table'] ?? '', $pg);
+                    $c = $this->quoteIdent($data['column'] ?? '', $pg);
+
+                    return "ALTER TABLE {$t} DROP COLUMN {$c};";
                 } elseif ($action === 'rename') {
-                    return "ALTER TABLE `{$data['table']}` RENAME COLUMN `{$data['from']}` TO `{$data['to']}`;";
+                    $t = $this->quoteTable($data['table'] ?? '', $pg);
+                    $from = $this->quoteIdent($data['from'] ?? '', $pg);
+                    $to = $this->quoteIdent($data['to'] ?? '', $pg);
+
+                    return $pg
+                        ? "ALTER TABLE {$t} RENAME COLUMN {$from} TO {$to};"
+                        : 'ALTER TABLE '.$t.' RENAME COLUMN '.$from.' TO '.$to.';';
                 }
                 break;
 
             case 'index':
                 if ($action === 'drop') {
                     $indexName = $data['name'] ?? '';
+                    if ($pg) {
+                        return 'DROP INDEX IF EXISTS '.$this->quoteIdent($indexName, true).';';
+                    }
+                    $t = $this->quoteTable($data['table'] ?? '', false);
 
-                    return "ALTER TABLE `{$data['table']}` DROP INDEX `{$indexName}`;";
+                    return "ALTER TABLE {$t} DROP INDEX ".$this->quoteIdent($indexName, false).';';
                 }
                 break;
 
             case 'foreign_key':
                 if ($action === 'drop') {
                     $fkName = $data['name'] ?? '';
+                    $t = $this->quoteTable($data['table'] ?? '', $pg);
 
-                    return "ALTER TABLE `{$data['table']}` DROP FOREIGN KEY `{$fkName}`;";
+                    return $pg
+                        ? 'ALTER TABLE '.$t.' DROP CONSTRAINT '.$this->quoteIdent($fkName, true).';'
+                        : 'ALTER TABLE '.$t.' DROP FOREIGN KEY '.$this->quoteIdent($fkName, false).';';
                 }
                 break;
         }
 
         return null;
+    }
+
+    protected function quoteIdent(string $name, bool $postgresql): string
+    {
+        if ($name === '') {
+            return $postgresql ? '""' : '``';
+        }
+
+        return $postgresql
+            ? '"'.str_replace('"', '""', $name).'"'
+            : '`'.str_replace('`', '``', $name).'`';
+    }
+
+    protected function quoteTable(string $name, bool $postgresql): string
+    {
+        return $this->quoteIdent($name, $postgresql);
     }
 
     /**
