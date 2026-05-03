@@ -492,8 +492,8 @@ Schema Lens analyzes the `down()` method of migrations to:
 
 - PHP 8.1+
 - Laravel 10.x–13.x (Laravel 13 requires PHP 8.3+)
-- MySQL 5.7+ or MariaDB 10.2+
-- Access to `information_schema` database
+- **MySQL 5.7+ or MariaDB 10.2+**, or **PostgreSQL 13+**, for commands that introspect the live schema
+- Catalog access (`information_schema` / `pg_catalog` as implemented)
 
 ## Environment Variables
 
