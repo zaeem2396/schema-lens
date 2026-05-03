@@ -80,7 +80,7 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 Schema Lens is a **migration preview and safe-migration** package for Laravel:
 
-- **✅ Schema introspection** — `SchemaIntrospector`: tables, columns, indexes, foreign keys via MySQL `information_schema`
+- **✅ Schema introspection** — `SchemaIntrospector`: tables, columns, indexes, foreign keys via **MySQL / MariaDB** `information_schema` or **PostgreSQL** catalog (`information_schema` + `pg_catalog` for indexes)
 - **✅ Migration parsing** — `MigrationParser`: extracts operations from migration files (create, drop, add column, etc.)
 - **✅ Destructive change detection** — Flags dangerous operations and risk levels
 - **✅ Data export** — CSV/JSON backup of affected data before destructive changes
