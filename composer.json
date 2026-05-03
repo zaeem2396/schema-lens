@@ -1,6 +1,6 @@
 {
     "name": "zaeem2396/schema-lens",
-    "description": "Laravel package to preview migration files against current MySQL schema with destructive change detection and data export",
+    "description": "Laravel package to preview migration files against current MySQL or PostgreSQL schema with destructive change detection and data export",
     "keywords": [
         "laravel",
         "migration",
@@ -15,7 +15,9 @@
         "schema-diff",
         "environments",
         "mysqldump",
-        "database-backup"
+        "database-backup",
+        "postgresql",
+        "pgsql"
     ],
     "type": "library",
     "license": "MIT",
