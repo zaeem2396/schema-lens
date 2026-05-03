@@ -20,7 +20,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 
 ## Features
 
-- 🔍 **Schema Diff Analysis**: Compare migration operations against current MySQL schema
+- 🔍 **Schema Diff Analysis**: Compare migration operations against the current database schema (MySQL/MariaDB or PostgreSQL when connected)
 - ⚠️ **Destructive Change Detection**: Automatically flags dangerous operations
 - 🔄 **Interactive Mode**: Step-by-step confirmation for destructive changes
 - 📄 **Single Migration Support**: Run a specific migration file with full analysis
