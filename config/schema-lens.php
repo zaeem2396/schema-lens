@@ -62,7 +62,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | No extra options here: pass Laravel connection names from config/database.php.
-    | Both connections must use the mysql driver.
+    | Both connections must use the same driver: mysql/mariadb, or both pgsql
+    | (PostgreSQL uses the connection “schema”, default `public`).
     |
     */
 
