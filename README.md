@@ -537,19 +537,19 @@ migration-preview:
 
 ## Troubleshooting
 
-- **"Schema Lens schema introspection requires MySQL"** — Use `schema:preview migration.php --sql` to generate SQL without connecting, or run the command against a MySQL database (e.g. in CI).
+- **“Schema Lens schema introspection requires MySQL, MariaDB, or PostgreSQL”** — Point the default Laravel DB connection (or `--connection` flows) at MySQL/MariaDB/PostgreSQL, or use `--sql`-only preview on unsupported drivers locally.
 - **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
 - **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
-- **`schema:diff` requires two MySQL connections** — Add both to `config/database.php`; SQLite or other drivers are rejected for this command.
+- **`schema:diff`** — Both connections must be **mysql/mariadb** or both **pgsql** (same driver family). Define them in `config/database.php`. For PostgreSQL, set `'schema'` (e.g. `public`) on each connection when not using defaults.
 - **`schema:diff` exits 1 on drift** — Use `--exit-zero` in CI if you only want logs without failing the job.
 - **`mysqldump` not found** — Install MySQL client tools on the host or set `SCHEMA_LENS_MYSQLDUMP_PATH` to the full path of the `mysqldump` binary.
 
 ## Limitations
 
 - `schema:diff` compares **structure** only (tables/columns/types), not row data or triggers
-- Currently supports MySQL/MariaDB only
-- Requires direct database connection (no cloud services)
-- Schema introspection uses `information_schema` tables
+- **SQL preview (`--sql`)** and **table `ENGINE=` hints** remain MySQL-oriented; PostgreSQL is supported for **live introspection**, `schema:diff`, and safer rollback hints when connected to Postgres
+- `migrate:safe --backup` / `mysqldump` applies to MySQL-compatible connections only (not PostgreSQL dumps in this release)
+- Requires direct database connection (no cloud proxies that hide catalog access)
 - Migration parser supports standard Laravel migration syntax
 
 ## Contributing
