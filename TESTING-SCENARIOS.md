@@ -174,7 +174,7 @@ Run `composer check` (Pint, PHPStan, PHPUnit) before release when changing this 
 
 ### 22. Schema diff between environments (`schema:diff`)
 
-Requires two **MySQL** connections in `config/database.php` (e.g. `mysql` and `mysql_staging`). On SQLite-only test apps, rely on package CI for validation.
+Requires two connections of the **same driver family**: both **mysql/mariadb** or both **pgsql** in `config/database.php`. On SQLite-only test apps, rely on package CI (MySQL and PostgreSQL workflows) for validation.
 
 - [ ] Run: `php artisan schema:diff` (no arguments) — expect error that both connections are required
 - [ ] Run: `php artisan schema:diff unknown_conn mysql` — expect unknown connection error
@@ -194,6 +194,16 @@ Requires **MySQL or MariaDB**, the `mysqldump` binary on the server (or `SCHEMA_
 - [ ] Run: `php artisan migrate:safe --pretend --backup` — no dump file should be written
 - [ ] Run: `php artisan schema:restore /path/to/dump.sql` — output contains a `mysql ... <` style hint; command does not execute restore
 - [ ] Run `composer check` before release when changing backup behavior
+
+### 24. PostgreSQL introspection (`DB_CONNECTION=pgsql`)
+
+Requires Laravel `pgsql` connection (see GitHub Actions **postgres-package** job) and Postgres 13+.
+
+- [ ] Set `database.default` / `database.connections.*` driver to `pgsql`, with correct `database`, `username`, `password`, `schema` (`public` if unset)
+- [ ] Run: `php artisan schema:preview` against a disposable DB with a migrate / seed — destructive detection and schema compare run without “requires MySQL” errors
+- [ ] Configure two Postgres connections (`pgsql_a`, `pgsql_b`): `schema:diff pgsql_a pgsql_b` — summarize drift; mismatched mysql+pgsql pairs should exit with driver-family error
+- [ ] Inspect rollback hint output on Postgres: identifiers double-quoted, FK drops use `DROP CONSTRAINT`
+- [ ] Run `composer check`; CI Postgres job exercises `PostgreSQLSchemaIntrospectionTest` automatically
 
 ---
 
