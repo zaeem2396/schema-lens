@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.8.0] - 2026-05-12
+
 ### Added
 
 - **PostgreSQL schema introspection** via `SchemaIntrospector`: tables, columns, indexes (`pg_catalog` / `information_schema`), and foreign keys scoped to the connection `schema` (default `public`).
@@ -21,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Documentation
 
 - README requirements, troubleshooting, limitations, `config/schema-lens.php` diff comment block, ROADMAP §2.1, USAGE, and TESTING-SCENARIOS updated for Postgres support.
+
+Before tagging v1.8.0: run `composer check` (Pint, PHPStan, PHPUnit).
 
 ## [1.7.0] - 2026-04-03
 
