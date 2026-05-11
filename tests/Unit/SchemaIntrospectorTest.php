@@ -9,11 +9,11 @@ use Zaeem2396\SchemaLens\Tests\TestCase;
 class SchemaIntrospectorTest extends TestCase
 {
     /** @test */
-    public function it_throws_when_driver_is_not_mysql(): void
+    public function it_throws_when_driver_is_not_supported(): void
     {
-        // Only run when DB is SQLite (default); on MySQL getTables() would not throw
-        if ($this->isMySQL()) {
-            $this->markTestSkipped('This test requires SQLite to assert non-MySQL driver throws.');
+        // Only run when DB is SQLite (default); supported drivers should not throw.
+        if ($this->isMySQL() || $this->isPostgreSQL()) {
+            $this->markTestSkipped('This test requires SQLite to assert unsupported-driver behavior.');
         }
 
         $this->expectException(RuntimeException::class);

@@ -157,9 +157,9 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_shows_error_without_stack_trace_when_not_verbose(): void
     {
-        // Run on SQLite so introspection throws (requires MySQL)
-        if ($this->isMySQL()) {
-            $this->markTestSkipped('This test requires SQLite to trigger introspection error.');
+        // Run on SQLite so introspection throws for an unsupported driver.
+        if ($this->isMySQL() || $this->isPostgreSQL()) {
+            $this->markTestSkipped('This test requires SQLite to trigger unsupported-driver introspection error.');
         }
 
         $this->artisan('schema:preview', [
@@ -172,8 +172,8 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_shows_stack_trace_when_verbose(): void
     {
-        if ($this->isMySQL()) {
-            $this->markTestSkipped('This test requires SQLite to trigger introspection error.');
+        if ($this->isMySQL() || $this->isPostgreSQL()) {
+            $this->markTestSkipped('This test requires SQLite to trigger unsupported-driver introspection error.');
         }
 
         $this->artisan('schema:preview', [
