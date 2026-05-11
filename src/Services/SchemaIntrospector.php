@@ -6,54 +6,80 @@ use Illuminate\Database\Connection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use Zaeem2396\SchemaLens\Contracts\SchemaIntrospectionDriverContract;
+use Zaeem2396\SchemaLens\Services\Introspection\MySqlInformationSchemaDriver;
+use Zaeem2396\SchemaLens\Services\Introspection\PostgresInformationSchemaDriver;
 
 class SchemaIntrospector
 {
-    protected ?string $connectionName;
+    protected ?string $connectionName = null;
 
-    protected string $database;
+    protected ?SchemaIntrospectionDriverContract $introspectionDriver = null;
 
     public function __construct(?string $connectionName = null)
     {
         $this->connectionName = $connectionName;
-        $this->database = $this->connection()->getDatabaseName();
     }
 
     /**
-     * Laravel database connection used for information_schema queries.
+     * Laravel database connection used for catalog queries.
      */
+    public function getConnection(): Connection
+    {
+        return $this->connection();
+    }
+
     protected function connection(): Connection
     {
         return DB::connection($this->connectionName);
     }
 
-    /**
-     * Ensure the database driver is MySQL. Schema introspection uses information_schema.
-     *
-     * @throws RuntimeException if the driver is not mysql
-     */
-    protected function ensureMySQLDriver(): void
+    protected function driver(): SchemaIntrospectionDriverContract
     {
-        $driver = $this->connection()->getDriverName();
-        if (strtolower($driver) !== 'mysql') {
-            throw new RuntimeException(
-                'Schema Lens schema introspection requires MySQL. Current driver: '.$driver.'. '
-                .'Use --sql to preview migrations without connecting to the database.'
-            );
+        return $this->introspectionDriver ??= $this->makeIntrospectionDriver();
+    }
+
+    protected function makeIntrospectionDriver(): SchemaIntrospectionDriverContract
+    {
+        $conn = $this->connection();
+        $driver = strtolower($conn->getDriverName());
+        if (MySqlInformationSchemaDriver::supports($driver)) {
+            return new MySqlInformationSchemaDriver($conn, (string) $conn->getDatabaseName());
         }
+        if (PostgresInformationSchemaDriver::supports($driver)) {
+            $schema = $conn->getConfig('schema') ?? 'public';
+
+            return new PostgresInformationSchemaDriver($conn, (string) $schema);
+        }
+
+        throw new RuntimeException(
+            'Schema Lens schema introspection requires MySQL, MariaDB, or PostgreSQL. Current driver: '.$driver.'. '
+            .'Use --sql to preview migrations without connecting to the database.'
+        );
     }
 
     /**
-     * Get all tables in the database.
+     * Whether the backing connection uses the PostgreSQL driver.
+     */
+    public function isPostgreSql(): bool
+    {
+        return PostgresInformationSchemaDriver::supports(strtolower($this->connection()->getDriverName()));
+    }
+
+    /**
+     * Whether the backing connection uses MySQL or MariaDB.
+     */
+    public function isMysqlFamily(): bool
+    {
+        return MySqlInformationSchemaDriver::supports(strtolower($this->connection()->getDriverName()));
+    }
+
+    /**
+     * Get all tables in the database (current MySQL schema or PostgreSQL search_path schema).
      */
     public function getTables(): Collection
     {
-        $this->ensureMySQLDriver();
-
-        return $this->connection()->table('information_schema.tables')
-            ->where('TABLE_SCHEMA', $this->database)
-            ->where('TABLE_TYPE', 'BASE TABLE')
-            ->pluck('TABLE_NAME');
+        return $this->driver()->getTables();
     }
 
     /**
@@ -61,13 +87,15 @@ class SchemaIntrospector
      */
     public function getTableStructure(string $tableName): array
     {
+        $drv = $this->driver();
+
         return [
-            'columns' => $this->getColumns($tableName),
-            'indexes' => $this->getIndexes($tableName),
-            'foreign_keys' => $this->getForeignKeys($tableName),
-            'engine' => $this->getTableEngine($tableName),
-            'charset' => $this->getTableCharset($tableName),
-            'collation' => $this->getTableCollation($tableName),
+            'columns' => $drv->getColumns($tableName),
+            'indexes' => $drv->getIndexes($tableName),
+            'foreign_keys' => $drv->getForeignKeys($tableName),
+            'engine' => $drv->getTableEngine($tableName),
+            'charset' => $drv->getTableCharset($tableName),
+            'collation' => $drv->getTableCollation($tableName),
         ];
     }
 
@@ -76,24 +104,7 @@ class SchemaIntrospector
      */
     public function getColumns(string $tableName): Collection
     {
-        $columns = $this->connection()->table('information_schema.columns')
-            ->where('TABLE_SCHEMA', $this->database)
-            ->where('TABLE_NAME', $tableName)
-            ->orderBy('ORDINAL_POSITION')
-            ->get()
-            ->map(function ($column) {
-                return [
-                    'name' => $column->COLUMN_NAME,
-                    'type' => $column->COLUMN_TYPE,
-                    'data_type' => $column->DATA_TYPE,
-                    'nullable' => $column->IS_NULLABLE === 'YES',
-                    'default' => $column->COLUMN_DEFAULT,
-                    'extra' => $column->EXTRA,
-                    'comment' => $column->COLUMN_COMMENT,
-                ];
-            });
-
-        return $columns;
+        return $this->driver()->getColumns($tableName);
     }
 
     /**
@@ -101,25 +112,7 @@ class SchemaIntrospector
      */
     public function getIndexes(string $tableName): Collection
     {
-        $indexes = $this->connection()->table('information_schema.statistics')
-            ->where('TABLE_SCHEMA', $this->database)
-            ->where('TABLE_NAME', $tableName)
-            ->orderBy('INDEX_NAME')
-            ->orderBy('SEQ_IN_INDEX')
-            ->get()
-            ->groupBy('INDEX_NAME')
-            ->map(function ($indexGroup) {
-                $first = $indexGroup->first();
-
-                return [
-                    'name' => $first->INDEX_NAME,
-                    'columns' => $indexGroup->pluck('COLUMN_NAME')->toArray(),
-                    'unique' => $first->NON_UNIQUE == 0,
-                    'type' => $first->INDEX_TYPE,
-                ];
-            });
-
-        return $indexes->values();
+        return $this->driver()->getIndexes($tableName);
     }
 
     /**
@@ -127,38 +120,7 @@ class SchemaIntrospector
      */
     public function getForeignKeys(string $tableName): Collection
     {
-        $foreignKeys = $this->connection()->table('information_schema.key_column_usage as kcu')
-            ->join('information_schema.referential_constraints as rc', function ($join) {
-                $join->on('kcu.CONSTRAINT_NAME', '=', 'rc.CONSTRAINT_NAME')
-                    ->on('kcu.TABLE_SCHEMA', '=', 'rc.CONSTRAINT_SCHEMA');
-            })
-            ->where('kcu.TABLE_SCHEMA', $this->database)
-            ->where('kcu.TABLE_NAME', $tableName)
-            ->whereNotNull('kcu.REFERENCED_TABLE_NAME')
-            ->select([
-                'kcu.CONSTRAINT_NAME',
-                'kcu.COLUMN_NAME',
-                'kcu.REFERENCED_TABLE_NAME',
-                'kcu.REFERENCED_COLUMN_NAME',
-                'rc.UPDATE_RULE',
-                'rc.DELETE_RULE',
-            ])
-            ->get()
-            ->groupBy('CONSTRAINT_NAME')
-            ->map(function ($constraintGroup) {
-                $first = $constraintGroup->first();
-
-                return [
-                    'name' => $first->CONSTRAINT_NAME,
-                    'columns' => $constraintGroup->pluck('COLUMN_NAME')->toArray(),
-                    'referenced_table' => $first->REFERENCED_TABLE_NAME,
-                    'referenced_columns' => $constraintGroup->pluck('REFERENCED_COLUMN_NAME')->toArray(),
-                    'on_update' => $first->UPDATE_RULE,
-                    'on_delete' => $first->DELETE_RULE,
-                ];
-            });
-
-        return $foreignKeys->values();
+        return $this->driver()->getForeignKeys($tableName);
     }
 
     /**
@@ -166,12 +128,7 @@ class SchemaIntrospector
      */
     public function getTableEngine(string $tableName): ?string
     {
-        $result = $this->connection()->table('information_schema.tables')
-            ->where('TABLE_SCHEMA', $this->database)
-            ->where('TABLE_NAME', $tableName)
-            ->value('ENGINE');
-
-        return $result;
+        return $this->driver()->getTableEngine($tableName);
     }
 
     /**
@@ -179,12 +136,7 @@ class SchemaIntrospector
      */
     public function getTableCharset(string $tableName): ?string
     {
-        $result = $this->connection()->table('information_schema.tables')
-            ->where('TABLE_SCHEMA', $this->database)
-            ->where('TABLE_NAME', $tableName)
-            ->value('TABLE_COLLATION');
-
-        return $result ? explode('_', $result)[0] : null;
+        return $this->driver()->getTableCharset($tableName);
     }
 
     /**
@@ -192,10 +144,7 @@ class SchemaIntrospector
      */
     public function getTableCollation(string $tableName): ?string
     {
-        return $this->connection()->table('information_schema.tables')
-            ->where('TABLE_SCHEMA', $this->database)
-            ->where('TABLE_NAME', $tableName)
-            ->value('TABLE_COLLATION');
+        return $this->driver()->getTableCollation($tableName);
     }
 
     /**
@@ -203,10 +152,7 @@ class SchemaIntrospector
      */
     public function tableExists(string $tableName): bool
     {
-        return $this->connection()->table('information_schema.tables')
-            ->where('TABLE_SCHEMA', $this->database)
-            ->where('TABLE_NAME', $tableName)
-            ->exists();
+        return $this->driver()->tableExists($tableName);
     }
 
     /**
@@ -214,11 +160,7 @@ class SchemaIntrospector
      */
     public function columnExists(string $tableName, string $columnName): bool
     {
-        return $this->connection()->table('information_schema.columns')
-            ->where('TABLE_SCHEMA', $this->database)
-            ->where('TABLE_NAME', $tableName)
-            ->where('COLUMN_NAME', $columnName)
-            ->exists();
+        return $this->driver()->columnExists($tableName, $columnName);
     }
 
     /**

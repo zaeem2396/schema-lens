@@ -10,9 +10,8 @@ use Zaeem2396\SchemaLens\Tests\TestCase;
 /**
  * RollbackSimulator tests.
  *
- * Note: These tests require MySQL because RollbackSimulator depends on
- * SchemaIntrospector which queries MySQL's information_schema tables.
- * Tests will be skipped if not running on MySQL.
+ * Note: These tests assume a MySQL connection via `skipIfNotMySQL()`. Referencing-table
+ * SQL now respects whatever driver the injected `SchemaIntrospector` resolved to.
  */
 class RollbackSimulatorTest extends TestCase
 {

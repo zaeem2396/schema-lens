@@ -9,8 +9,7 @@ use Zaeem2396\SchemaLens\Tests\TestCase;
 /**
  * SafeMigrateCommand feature tests.
  *
- * Note: These tests require MySQL because the command uses SchemaIntrospector
- * which queries MySQL's information_schema tables.
+ * Note: These tests skip unless MySQL is available (`skipIfNotMySQL()`); Postgres uses the shared introspector separately in CI smoke tests.
  */
 class SafeMigrateCommandTest extends TestCase
 {

@@ -20,7 +20,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 
 ## Features
 
-- 🔍 **Schema Diff Analysis**: Compare migration operations against current MySQL schema
+- 🔍 **Schema Diff Analysis**: Compare migration operations against the current database schema (MySQL/MariaDB or PostgreSQL when connected)
 - ⚠️ **Destructive Change Detection**: Automatically flags dangerous operations
 - 🔄 **Interactive Mode**: Step-by-step confirmation for destructive changes
 - 📄 **Single Migration Support**: Run a specific migration file with full analysis
@@ -31,7 +31,7 @@ A Laravel package that extends the default Artisan CLI with commands to preview 
 - 📄 **SQL Preview**: Generate raw SQL statements from migrations
 - ⚙️ **Configurable SQL engine**: Set table engine (InnoDB, MyISAM, etc.) for generated SQL via config
 - 📊 **Migration Dependency Graph**: Visualize migration dependencies (foreign keys) as ASCII tree or JSON
-- 🔀 **Schema diff between environments**: Compare two MySQL connections (missing tables/columns, type mismatches)
+- 🔀 **Schema diff between environments**: Compare two Laravel connections (`mysql`/`mariadb` or `pgsql` pairs; missing tables/columns, type mismatches)
 - 📦 **Full database backup**: Optional `mysqldump` before `migrate:safe` (`--backup`, `--backup-path`, config auto backup and retention)
 - 📄 **JSON Export**: Optional JSON report for CI/CD integration
 - 🗜️ **Compression**: Automatic compression of exported data
@@ -58,7 +58,7 @@ The package supports:
 - **PHP 8.1+**
 - **Laravel 10.x through 13.x**
 
-**Schema introspection (diff analysis, destructive detection) requires MySQL.** The `schema:preview` command connects to your database to compare the migration against the current schema. If you use SQLite or another driver locally, use `schema:preview migration.php --sql` to generate SQL without connecting, or run full preview against a MySQL database (e.g. in CI).
+**Schema introspection** (`schema:preview`, `migrate:safe`, destructive detection, `schema:diff`) supports **MySQL / MariaDB** and **PostgreSQL** using each engine’s catalogs (`information_schema` and `pg_catalog` where needed). SQLite and other Laravel drivers cannot run introspection-only flows here; use `schema:preview migration.php --sql` to inspect generated SQL offline, or run tests against MySQL or PostgreSQL (see CI workflow).
 
 **Error output:** When a command fails, only the error message is shown by default. Use `-v` / `--verbose` to see the full stack trace (e.g. for debugging).
 
@@ -492,8 +492,8 @@ Schema Lens analyzes the `down()` method of migrations to:
 
 - PHP 8.1+
 - Laravel 10.x–13.x (Laravel 13 requires PHP 8.3+)
-- MySQL 5.7+ or MariaDB 10.2+
-- Access to `information_schema` database
+- **MySQL 5.7+ or MariaDB 10.2+**, or **PostgreSQL 13+**, for commands that introspect the live schema
+- Catalog access (`information_schema` / `pg_catalog` as implemented)
 
 ## Environment Variables
 
@@ -537,19 +537,19 @@ migration-preview:
 
 ## Troubleshooting
 
-- **"Schema Lens schema introspection requires MySQL"** — Use `schema:preview migration.php --sql` to generate SQL without connecting, or run the command against a MySQL database (e.g. in CI).
+- **“Schema Lens schema introspection requires MySQL, MariaDB, or PostgreSQL”** — Point the default Laravel DB connection (or `--connection` flows) at MySQL/MariaDB/PostgreSQL, or use `--sql`-only preview on unsupported drivers locally.
 - **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
 - **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
-- **`schema:diff` requires two MySQL connections** — Add both to `config/database.php`; SQLite or other drivers are rejected for this command.
+- **`schema:diff`** — Both connections must be **mysql/mariadb** or both **pgsql** (same driver family). Define them in `config/database.php`. For PostgreSQL, set `'schema'` (e.g. `public`) on each connection when not using defaults.
 - **`schema:diff` exits 1 on drift** — Use `--exit-zero` in CI if you only want logs without failing the job.
 - **`mysqldump` not found** — Install MySQL client tools on the host or set `SCHEMA_LENS_MYSQLDUMP_PATH` to the full path of the `mysqldump` binary.
 
 ## Limitations
 
 - `schema:diff` compares **structure** only (tables/columns/types), not row data or triggers
-- Currently supports MySQL/MariaDB only
-- Requires direct database connection (no cloud services)
-- Schema introspection uses `information_schema` tables
+- **SQL preview (`--sql`)** and **table `ENGINE=` hints** remain MySQL-oriented; PostgreSQL is supported for **live introspection**, `schema:diff`, and safer rollback hints when connected to Postgres
+- `migrate:safe --backup` / `mysqldump` applies to MySQL-compatible connections only (not PostgreSQL dumps in this release)
+- Requires direct database connection (no cloud proxies that hide catalog access)
 - Migration parser supports standard Laravel migration syntax
 
 ## Contributing

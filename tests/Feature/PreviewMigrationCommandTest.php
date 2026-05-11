@@ -10,9 +10,8 @@ use Zaeem2396\SchemaLens\Tests\TestCase;
 /**
  * PreviewMigrationCommand feature tests.
  *
- * Note: These tests require MySQL because the command uses SchemaIntrospector
- * which queries MySQL's information_schema tables. Tests will be skipped
- * if not running on MySQL.
+ * Note: This suite skips unless `skipIfNotMySQL()` passes (fixtures target MySQL).
+ * PostgreSQL coverage lives in CI via `PostgreSQLSchemaIntrospectionTest` plus driver unit tests.
  */
 class PreviewMigrationCommandTest extends TestCase
 {
@@ -158,9 +157,9 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_shows_error_without_stack_trace_when_not_verbose(): void
     {
-        // Run on SQLite so introspection throws (requires MySQL)
-        if ($this->isMySQL()) {
-            $this->markTestSkipped('This test requires SQLite to trigger introspection error.');
+        // Run on SQLite so introspection throws for an unsupported driver.
+        if ($this->isMySQL() || $this->isPostgreSQL()) {
+            $this->markTestSkipped('This test requires SQLite to trigger unsupported-driver introspection error.');
         }
 
         $this->artisan('schema:preview', [
@@ -173,8 +172,8 @@ class PreviewMigrationCommandTest extends TestCase
     /** @test */
     public function it_shows_stack_trace_when_verbose(): void
     {
-        if ($this->isMySQL()) {
-            $this->markTestSkipped('This test requires SQLite to trigger introspection error.');
+        if ($this->isMySQL() || $this->isPostgreSQL()) {
+            $this->markTestSkipped('This test requires SQLite to trigger unsupported-driver introspection error.');
         }
 
         $this->artisan('schema:preview', [

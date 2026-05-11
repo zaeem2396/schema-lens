@@ -21,7 +21,7 @@ class SchemaDiffCommand extends Command
                             {--stubs : Print suggested migration-style hints for missing tables/columns}
                             {--exit-zero : Always exit 0 when the command succeeds, even if schemas differ}';
 
-    protected $description = 'Compare MySQL schemas between two Laravel database connections';
+    protected $description = 'Compare database schemas between two Laravel connections (MySQL/MariaDB or PostgreSQL)';
 
     public function handle(SchemaComparator $comparator, SchemaMigrationStubHint $stubHint): int
     {
@@ -42,12 +42,30 @@ class SchemaDiffCommand extends Command
 
                 return self::FAILURE;
             }
-            $driver = $connections[$name]['driver'] ?? '';
-            if (strtolower((string) $driver) !== 'mysql') {
-                $this->error("Connection \"{$name}\" must use the mysql driver (found: {$driver}).");
+        }
+
+        $normalize = static function (string $driver): string {
+            $d = strtolower($driver);
+
+            return $d === 'mariadb' ? 'mysql' : $d;
+        };
+
+        $dFrom = strtolower((string) ($connections[$from]['driver'] ?? ''));
+        $dTo = strtolower((string) ($connections[$to]['driver'] ?? ''));
+        foreach ([[$dFrom, $from], [$dTo, $to]] as [$drv, $label]) {
+            if (! in_array($drv, ['mysql', 'mariadb', 'pgsql'], true)) {
+                $this->error("Connection \"{$label}\" must use mysql, mariadb, or pgsql (found: {$drv}).");
 
                 return self::FAILURE;
             }
+        }
+
+        if ($normalize($dFrom) !== $normalize($dTo)) {
+            $this->error(
+                'Both connections must use the same driver family (e.g. mysql with mysql/mariadb, or pgsql with pgsql).'
+            );
+
+            return self::FAILURE;
         }
 
         try {

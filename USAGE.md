@@ -168,7 +168,7 @@ done
 
 ### Compare schemas between environments
 
-Use `schema:diff` to compare two **MySQL** Laravel connections (define both in `config/database.php`). The first connection is the reference schema; differences are reported relative to the second.
+Use `schema:diff` to compare two Laravel database connections **of the same family** (`mysql` / `mariadb` pairs, or two `pgsql` connections). Configure both names in `config/database.php`; for PostgreSQL, set `'schema'` (default `public`) when you do not rely on Laravel’s default. The first connection is the reference schema; differences are reported relative to the second.
 
 ```bash
 php artisan schema:diff mysql mysql_staging
