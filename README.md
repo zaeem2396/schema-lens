@@ -14,9 +14,9 @@
 
 ---
 
-A Laravel package that extends the default Artisan CLI with commands to preview a single migration file against the current MySQL schema before execution. It provides comprehensive schema diff analysis, destructive change detection, automatic data export, and rollback simulation.
+A Laravel package that extends the default Artisan CLI with commands to preview a single migration file against the current database schema before execution. It provides comprehensive schema diff analysis, destructive change detection, automatic data export, and rollback simulation.
 
-**Release highlights:** **v4.7.0** adds optional full-database backup before safe migrations (`migrate:safe --backup`), `schema-lens.backup` configuration, and `schema:restore` for restore hints. **v4.6.0** adds `schema:diff` across two MySQL connections. **v4.5.0** adds Laravel 13 support. Details: [CHANGELOG.md](CHANGELOG.md).
+**Release highlights:** **v1.8.0** adds PostgreSQL schema introspection and paired `pgsql` support for `schema:diff`. **v1.7.0** adds optional full-database backup before safe migrations (`migrate:safe --backup`), `schema-lens.backup` configuration, and `schema:restore` for restore hints. **v1.6.0** adds `schema:diff` across two MySQL connections. Details: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
 

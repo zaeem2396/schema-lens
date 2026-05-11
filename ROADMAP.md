@@ -1,6 +1,6 @@
 # Schema Lens Roadmap
 
-> **Current Version:** v4.7.0 (release branch) · **Composer / tag:** v1.7.0  
+> **Current Version:** v1.8.0 (release branch)  
 > **Last Updated:** April 2026
 
 This document outlines the planned features and enhancements for Schema Lens. Each feature includes a dedicated git branch name for tracking development progress.
@@ -24,7 +24,7 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 ## Roadmap status overview
 
-**Package line (marketing):** v4.7.0 — see [Changelog](#changelog) for dated entries.  
+**Current release line:** v1.8.0 — see [Changelog](#changelog) for dated entries.  
 **Status legend:** <span style="color:#1a7f37;font-weight:600;">Completed</span> (green) · <span style="color:#bf8700;font-weight:600;">In progress</span> (yellow) · <span style="color:#cf222e;font-weight:600;">Planned</span> (red) *(GitHub and some viewers may strip inline `style`; the words Completed / In progress / Planned remain readable.)*
 
 ### Phase 1 — Core enhancements
@@ -43,7 +43,7 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 | Version | Item | Status | Branch |
 |---------|------|--------|--------|
-| *next* | **2.1** PostgreSQL support (introspection, `schema:diff`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> *(pending release)* | `feature/postgresql-support` |
+| v1.8.0 | **2.1** PostgreSQL support (introspection, `schema:diff`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/postgresql-support` |
 | — | **2.2** SQLite support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/sqlite-support` |
 | — | **2.3** SQL Server support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/sqlserver-support` |
 
@@ -286,7 +286,7 @@ php artisan schema:diff mysql mysql_staging --format=json --stubs
 
 **Branch:** `feature/auto-backup`
 
-**Status:** ✅ Released in v1.7.0 (docs line v4.7.0)
+**Status:** ✅ Released in v1.7.0
 
 **Description:**  
 Optional full logical database backup (`mysqldump`) before `migrate:safe` runs, with configurable retention and a non-destructive restore hint command.
@@ -329,7 +329,7 @@ php artisan schema:restore /backups/pre-migrate.sql
 
 **Branch:** `feature/postgresql-support`
 
-**Status:** ✅ Implemented *(pending semver / marketing release tag)* — Core introspection, `schema:diff` for paired `pgsql` connections, and rollback hint SQL parity for Postgres; `--sql` / `SqlGenerator` output remains primarily MySQL-flavored until a dialect switch is introduced.
+**Status:** ✅ Released in v1.8.0 — Core introspection, `schema:diff` for paired `pgsql` connections, and rollback hint SQL parity for Postgres; `--sql` / `SqlGenerator` output remains primarily MySQL-flavored until a dialect switch is introduced.
 
 **Description:**  
 Extend schema introspection so PostgreSQL applications can run `schema:preview`, `migrate:safe`, and `schema:diff` against real databases.
@@ -934,7 +934,7 @@ This section merges a **long-term product vision**: evolving from a migration-pr
 | v1.3.0 | Medium | Configurable SQL Engine | Low | Medium | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
 | v1.6.0 | Medium | Schema Diff | High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
 | v1.7.0 | High | Backup before migration (`migrate:safe --backup`, `schema:restore`) | Medium-High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
-| — | High | PostgreSQL Support | High | High | <span style="color:#cf222e;font-weight:600;">Planned</span> |
+| v1.8.0 | High | PostgreSQL Support | High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
 | — | Medium | Performance Analysis | High | Medium | <span style="color:#cf222e;font-weight:600;">Planned</span> |
 | — | Medium | CI/CD Integration | Medium | High | <span style="color:#cf222e;font-weight:600;">Planned</span> |
 | — | Low | Web Dashboard | Very High | Medium | <span style="color:#cf222e;font-weight:600;">Planned</span> |
@@ -965,9 +965,10 @@ git push origin feature/interactive-mode
 
 | Date | Version | Changes |
 |------|---------|---------|
-| Apr 2026 | v4.7.0 | `migrate:safe --backup` / `--backup-path`, `schema-lens.backup` config, `BackupManager` + mysqldump drivers, `schema:restore`; roadmap status tables; scenario 23 |
-| Apr 2026 | v4.6.0 | `schema:diff` — compare MySQL schemas across two Laravel DB connections; JSON and `--stubs`; optional named connection on `SchemaIntrospector`; docs and scenario 22 |
-| Mar 2026 | v4.5.0 | Laravel 13 support (`illuminate/*` ^13, Orchestra Testbench ^11); CI matrix for Laravel 13; README and `pint.json` updates |
+| May 2026 | v1.8.0 | PostgreSQL introspection via `SchemaIntrospector`, paired `pgsql` support for `schema:diff`, Postgres rollback hints, and PostgreSQL CI job |
+| Apr 2026 | v1.7.0 | `migrate:safe --backup` / `--backup-path`, `schema-lens.backup` config, `BackupManager` + mysqldump drivers, `schema:restore`; roadmap status tables; scenario 23 |
+| Apr 2026 | v1.6.0 | `schema:diff` — compare MySQL schemas across two Laravel DB connections; JSON and `--stubs`; optional named connection on `SchemaIntrospector`; docs and scenario 22 |
+| Mar 2026 | v1.5.0 | Laravel 13 support (`illuminate/*` ^13, Orchestra Testbench ^11); CI matrix for Laravel 13; README and `pint.json` updates |
 | Jan 2025 | v1.3.0 | Configurable table engine for generated SQL via `schema-lens.sql.engine` / `SCHEMA_LENS_SQL_ENGINE`; falls back to DB connection then InnoDB |
 | Jan 2025 | v1.2.3 | Defensive fixes: MigrationParser throws on unreadable file; commands show stack trace only with `--verbose`; SchemaIntrospector fails fast with clear message when driver is not MySQL |
 | Jan 2025 | v1.2.2 | Bug fixes: MigrationParser parses `dropColumn(['col1','col2'])` array syntax; DataExporter throws on CSV fopen failure instead of undefined behavior |
