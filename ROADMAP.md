@@ -1,7 +1,7 @@
 # Schema Lens Roadmap
 
-> **Current Version:** v1.8.0 (release branch)  
-> **Last Updated:** April 2026
+> **Current Version:** v1.8.0  
+> **Last Updated:** June 2026
 
 This document outlines the planned features and enhancements for Schema Lens. Each feature includes a dedicated git branch name for tracking development progress.
 
@@ -9,7 +9,10 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 ## 📋 Table of Contents
 
-- [Roadmap status overview](#roadmap-status-overview)
+- [Release Roadmap](#release-roadmap)
+- [Upcoming Releases](#upcoming-releases)
+- [Long-Term Vision](#long-term-vision)
+- [Status Legend](#status-legend)
 - [What Schema Lens Is Today](#what-schema-lens-is-today)
 - [Phase 1: Core Enhancements](#phase-1-core-enhancements)
 - [Phase 2: Database Support Expansion](#phase-2-database-support-expansion)
@@ -22,57 +25,85 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 ---
 
-## Roadmap status overview
+## Release Roadmap
 
-**Current release line:** v1.8.0 — see [Changelog](#changelog) for dated entries.  
-**Status legend:** <span style="color:#1a7f37;font-weight:600;">Completed</span> (green) · <span style="color:#bf8700;font-weight:600;">In progress</span> (yellow) · <span style="color:#cf222e;font-weight:600;">Planned</span> (red) *(GitHub and some viewers may strip inline `style`; the words Completed / In progress / Planned remain readable.)*
+> **Current release:** v1.8.0 — see [Changelog](#changelog) for dated entries.
 
-### Phase 1 — Core enhancements
+### Released
 
-| Version | Item | Status | Branch |
-|---------|------|--------|--------|
-| v1.1.0 | **1.1** Interactive mode for destructive changes | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/interactive-mode` |
-| v1.1.1 | **1.2** Single migration file support | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/single-migration` |
-| v1.2.0 | **1.3** Dry run / SQL preview | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/dry-run-sql` |
-| v1.3.0 | **1.4** Configurable SQL engine | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/configurable-sql-engine` |
-| v1.4.x | **1.5** Migration dependency graph (`schema:graph`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/dependency-graph` |
-| v1.6.0 | **1.6** Schema diff between environments | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/schema-diff` |
-| v1.7.0 | **1.7** Backup before migration (`migrate:safe --backup`, `schema:restore`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/auto-backup` |
+| Version | Feature | Status | Branch |
+|---------|---------|--------|--------|
+| v1.0.0 | Initial Release | 🟢 Complete | `release/v1.0.0` |
+| v1.1.0 | Interactive Mode for Destructive Changes | 🟢 Complete | `feature/interactive-mode` |
+| v1.1.1 | Single Migration File Support | 🟢 Complete | `feature/single-migration` |
+| v1.2.0 | Dry Run / SQL Preview | 🟢 Complete | `feature/dry-run-sql` |
+| v1.2.1 | Bug Fixes & Stability Improvements | 🟢 Complete | `hotfix/v1.2.1` |
+| v1.2.2 | Migration Parser Improvements | 🟢 Complete | `hotfix/v1.2.2` |
+| v1.2.3 | Defensive Error Handling Improvements | 🟢 Complete | `hotfix/v1.2.3` |
+| v1.3.0 | Configurable SQL Engine | 🟢 Complete | `feature/configurable-sql-engine` |
+| v1.3.1 | Documentation & Examples | 🟢 Complete | `hotfix/v1.3.1` |
+| v1.4.0 | Migration Dependency Graph | 🟢 Complete | `feature/dependency-graph` |
+| v1.4.1 | Dependency Detection Fixes | 🟢 Complete | `hotfix/v1.4.1` |
+| v1.5.0 | Laravel 13 Support | 🟢 Complete | `feature/laravel-13-support` |
+| v1.5.1 | CI Matrix Improvements | 🟢 Complete | `hotfix/v1.5.1` |
+| v1.6.0 | Schema Diff Between Environments | 🟢 Complete | `feature/schema-diff` |
+| v1.6.1 | Schema Diff Accuracy Improvements | 🟢 Complete | `hotfix/v1.6.1` |
+| v1.7.0 | Backup Before Migration | 🟢 Complete | `feature/auto-backup` |
+| v1.7.1 | Backup Retention Improvements | 🟢 Complete | `hotfix/v1.7.1` |
+| v1.8.0 | PostgreSQL Support | 🟢 Complete | `feature/postgresql-support` |
 
-### Phase 2 — Database support expansion
+## Upcoming Releases
 
-| Version | Item | Status | Branch |
-|---------|------|--------|--------|
-| v1.8.0 | **2.1** PostgreSQL support (introspection, `schema:diff`) | <span style="color:#1a7f37;font-weight:600;">Completed</span> | `feature/postgresql-support` |
-| — | **2.2** SQLite support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/sqlite-support` |
-| — | **2.3** SQL Server support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/sqlserver-support` |
+| Version | Feature | Status | Branch |
+|---------|---------|--------|--------|
+| v1.8.1 | PostgreSQL Stabilization & Bug Fixes | 🔴 Planned | `hotfix/v1.8.1` |
+| v1.8.2 | PostgreSQL Documentation & Examples | 🔴 Planned | `hotfix/v1.8.2` |
+| v1.9.0 | SQLite Support | 🔴 Planned | `feature/sqlite-support` |
+| v1.9.1 | SQLite Compatibility Fixes | 🔴 Planned | `hotfix/v1.9.1` |
+| v1.10.0 | SQL Server Support | 🔴 Planned | `feature/sqlserver-support` |
+| v1.10.1 | SQL Server Stabilization | 🔴 Planned | `hotfix/v1.10.1` |
+| v1.11.0 | Performance Impact Analysis | 🔴 Planned | `feature/performance-analysis` |
+| v1.11.1 | Performance Rule Refinements | 🔴 Planned | `hotfix/v1.11.1` |
+| v1.12.0 | Data Loss Estimation | 🔴 Planned | `feature/data-loss-estimation` |
+| v1.12.1 | Data Loss Accuracy Improvements | 🔴 Planned | `hotfix/v1.12.1` |
+| v1.13.0 | Schema Health Check | 🔴 Planned | `feature/schema-health` |
+| v1.13.1 | Health Rule Improvements | 🔴 Planned | `hotfix/v1.13.1` |
+| v1.14.0 | Index Optimization Suggestions | 🔴 Planned | `feature/index-suggestions` |
+| v1.14.1 | Index Analyzer Improvements | 🔴 Planned | `hotfix/v1.14.1` |
+| v1.15.0 | CI/CD Pipeline Integration | 🔴 Planned | `feature/cicd-integration` |
+| v1.15.1 | GitHub Actions Enhancements | 🔴 Planned | `hotfix/v1.15.1` |
+| v1.16.0 | Better Error Messages & Suggestions | 🔴 Planned | `feature/better-errors` |
+| v1.16.1 | Additional Diagnostics Rules | 🔴 Planned | `hotfix/v1.16.1` |
+| v1.17.0 | Laravel Tinker Integration | 🔴 Planned | `feature/tinker-integration` |
+| v1.17.1 | Tinker Helper Improvements | 🔴 Planned | `hotfix/v1.17.1` |
+| v1.18.0 | VS Code / IDE Integration | 🔴 Planned | `feature/vscode-json-schema` |
+| v1.18.1 | IDE Export Enhancements | 🔴 Planned | `hotfix/v1.18.1` |
+| v1.19.0 | Slack / Discord Notifications | 🔴 Planned | `feature/notifications` |
+| v1.19.1 | Notification Templates & Channels | 🔴 Planned | `hotfix/v1.19.1` |
+| v1.20.0 | Laravel Telescope Integration | 🔴 Planned | `feature/telescope-integration` |
+| v1.20.1 | Telescope Metrics Enhancements | 🔴 Planned | `hotfix/v1.20.1` |
 
-### Phase 3 — Advanced analysis
+## Long-Term Vision
 
-| Version | Item | Status | Branch |
-|---------|------|--------|--------|
-| — | **3.1** Performance impact analysis | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/performance-analysis` |
-| — | **3.2** Data loss estimation | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/data-loss-estimation` |
-| — | **3.3** Index optimization suggestions | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/index-suggestions` |
-| — | **3.4** Schema health check | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/schema-health` |
+| Version | Feature | Status | Branch |
+|---------|---------|--------|--------|
+| v2.0.0 | Schema Intelligence Engine | 🔴 Planned | `feature/schema-intelligence` |
+| v2.1.0 | Migration Generator | 🔴 Planned | `feature/migration-generator` |
+| v2.2.0 | Schema Versioning | 🔴 Planned | `feature/schema-versioning` |
+| v2.3.0 | Time Travel Schema Inspection | 🔴 Planned | `feature/time-travel` |
+| v2.4.0 | AI-Powered Migration Suggestions | 🔴 Planned | `feature/ai-suggestions` |
+| v2.5.0 | Multi-Tenancy Support | 🔴 Planned | `feature/multi-tenancy` |
+| v2.6.0 | Visual Migration Builder | 🔴 Planned | `feature/visual-builder` |
 
-### Phase 4 — Developer experience
+## Status Legend
 
-| Version | Item | Status | Branch |
-|---------|------|--------|--------|
-| — | **4.1** Laravel Tinker integration | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/tinker-integration` |
-| — | **4.2** VS Code / JSON schema support | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/vscode-json-schema` |
-| — | **4.3** Web dashboard (optional package) | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/web-dashboard` |
-| — | **4.4** Better error messages & suggestions | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/better-errors` |
+| Label | Meaning |
+|-------|---------|
+| 🟢 Complete | Released and available |
+| 🟡 In Progress | Currently being developed |
+| 🔴 Planned | Scheduled for future development |
 
-### Phase 5 — Integration & ecosystem
-
-| Version | Item | Status | Branch |
-|---------|------|--------|--------|
-| — | **5.1** CI/CD pipeline integration | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/cicd-integration` |
-| — | **5.2** Slack / Discord notifications | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/notifications` |
-| — | **5.3** Spatie Laravel Backup (deep integration) | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/spatie-backup` |
-| — | **5.4** Laravel Telescope integration | <span style="color:#cf222e;font-weight:600;">Planned</span> | `feature/telescope-integration` |
+Every feature release includes a logical patch lane (`v1.x.1`, `v1.x.2`, …) for bug fixes, documentation, refactoring, and stabilization without forcing every change into a new minor version.
 
 ---
 
@@ -856,17 +887,13 @@ Log all schema changes and migration executions to Laravel Telescope.
 
 ## Future Considerations
 
-### Ideas for v3.0+
+Additional ideas not yet scheduled in [Long-Term Vision](#long-term-vision):
 
 | Feature | Description | Branch Name |
 |---------|-------------|-------------|
-| AI-Powered Suggestions | Use LLMs to suggest optimal migrations | `feature/ai-suggestions` |
-| Migration Generator | Generate migrations from schema diff | `feature/migration-generator` |
-| Multi-tenancy Support | Handle multi-tenant database schemas | `feature/multi-tenancy` |
-| Time Travel | View schema state at any point in time | `feature/time-travel` |
-| Schema Versioning | Git-like versioning for database schema | `feature/schema-versioning` |
 | Migration Linting | Lint migrations for best practices | `feature/migration-linter` |
-| Visual Migration Builder | Drag-and-drop migration creation | `feature/visual-builder` |
+| Web Dashboard | Optional package for errors, suggestions, query insights | `feature/web-dashboard` |
+| Spatie Laravel Backup (deep integration) | Beyond current `mysqldump` backup | `feature/spatie-backup` |
 
 ---
 
@@ -921,24 +948,6 @@ This section merges a **long-term product vision**: evolving from a migration-pr
 | VS Code / Cursor extension (inline “N+1” etc.) | ❌ Not started | |
 
 **Summary:** The current repo is a **migration-preview and safe-migration** tool with **schema introspection** and **config-driven, structured output**. The vision above extends toward an **error-analysis and AI-assisted debugging** product; merging it here keeps one roadmap while marking what is already done vs. planned.
-
----
-
-## Priority Matrix
-
-| Version | Priority | Feature | Effort | Impact | Status |
-|---------|----------|---------|--------|--------|--------|
-| v1.1.0 | High | Interactive Mode | Medium | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
-| v1.1.1 | High | Single Migration File | Low | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
-| v1.2.0 | High | Dry Run SQL Preview | Medium-High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
-| v1.3.0 | Medium | Configurable SQL Engine | Low | Medium | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
-| v1.6.0 | Medium | Schema Diff | High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
-| v1.7.0 | High | Backup before migration (`migrate:safe --backup`, `schema:restore`) | Medium-High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
-| v1.8.0 | High | PostgreSQL Support | High | High | <span style="color:#1a7f37;font-weight:600;">Completed</span> |
-| — | Medium | Performance Analysis | High | Medium | <span style="color:#cf222e;font-weight:600;">Planned</span> |
-| — | Medium | CI/CD Integration | Medium | High | <span style="color:#cf222e;font-weight:600;">Planned</span> |
-| — | Low | Web Dashboard | Very High | Medium | <span style="color:#cf222e;font-weight:600;">Planned</span> |
-| — | Low | AI Suggestions | High | Medium | <span style="color:#cf222e;font-weight:600;">Future</span> |
 
 ---
 
