@@ -34,6 +34,7 @@ class PostgreSQLSchemaIntrospectionTest extends TestCase
 
             $indexes = $inspector->getIndexes('schema_lens_pg_probe');
             $this->assertGreaterThan(0, $indexes->count());
+            $this->assertNotNull($indexes->firstWhere('primary', true));
         } finally {
             Schema::dropIfExists('schema_lens_pg_probe');
         }
