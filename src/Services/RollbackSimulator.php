@@ -127,29 +127,47 @@ class RollbackSimulator
         $conn = $this->introspector->getConnection();
         $driver = strtolower($conn->getDriverName());
 
-        $query = $conn->table('information_schema.key_column_usage as kcu')
-            ->join('information_schema.referential_constraints as rc', function ($join) {
-                $join->on('kcu.constraint_name', '=', 'rc.constraint_name')
-                    ->on('kcu.constraint_catalog', '=', 'rc.constraint_catalog')
-                    ->on('kcu.constraint_schema', '=', 'rc.constraint_schema');
-            })
-            ->whereNotNull('kcu.referenced_table_name')
-            ->whereRaw('LOWER(kcu.referenced_table_name) = ?', [strtolower($tableName)]);
-
         if (PostgresInformationSchemaDriver::supports($driver)) {
             $scope = PostgresCatalogScope::fromConnection($conn);
-            $query->whereRaw('LOWER(kcu.referenced_table_catalog) = ?', [$scope->normalizedCatalog()])
-                ->whereRaw('LOWER(kcu.referenced_table_schema) = ?', [$scope->normalizedSchema()]);
-        } elseif (MySqlInformationSchemaDriver::supports($driver)) {
-            $query->where('kcu.referenced_table_schema', $conn->getDatabaseName())
-                ->where('kcu.referenced_table_name', $tableName);
-        } else {
-            return [];
+
+            return $conn->table('information_schema.table_constraints as tc')
+                ->join('information_schema.key_column_usage as kcu', function ($join) {
+                    $join->on('tc.constraint_catalog', '=', 'kcu.constraint_catalog')
+                        ->on('tc.constraint_schema', '=', 'kcu.constraint_schema')
+                        ->on('tc.constraint_name', '=', 'kcu.constraint_name')
+                        ->on('tc.table_schema', '=', 'kcu.table_schema')
+                        ->on('tc.table_name', '=', 'kcu.table_name');
+                })
+                ->join('information_schema.constraint_column_usage as ccu', function ($join) {
+                    $join->on('ccu.constraint_catalog', '=', 'tc.constraint_catalog')
+                        ->on('ccu.constraint_schema', '=', 'tc.constraint_schema')
+                        ->on('ccu.constraint_name', '=', 'tc.constraint_name');
+                })
+                ->where('tc.constraint_type', 'FOREIGN KEY')
+                ->whereRaw('LOWER(ccu.table_catalog) = ?', [$scope->normalizedCatalog()])
+                ->whereRaw('LOWER(ccu.table_schema) = ?', [$scope->normalizedSchema()])
+                ->whereRaw('LOWER(ccu.table_name) = ?', [strtolower($tableName)])
+                ->distinct()
+                ->pluck('kcu.table_name')
+                ->toArray();
         }
 
-        return $query->distinct()
-            ->pluck('kcu.table_name')
-            ->toArray();
+        if (MySqlInformationSchemaDriver::supports($driver)) {
+            return $conn->table('information_schema.key_column_usage as kcu')
+                ->join('information_schema.referential_constraints as rc', function ($join) {
+                    $join->on('kcu.constraint_name', '=', 'rc.constraint_name')
+                        ->on('kcu.constraint_catalog', '=', 'rc.constraint_catalog')
+                        ->on('kcu.constraint_schema', '=', 'rc.constraint_schema');
+                })
+                ->whereNotNull('kcu.referenced_table_name')
+                ->where('kcu.referenced_table_schema', $conn->getDatabaseName())
+                ->where('kcu.referenced_table_name', $tableName)
+                ->distinct()
+                ->pluck('kcu.table_name')
+                ->toArray();
+        }
+
+        return [];
     }
 
     /**

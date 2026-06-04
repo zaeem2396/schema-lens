@@ -112,33 +112,52 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
 
     public function getForeignKeys(string $tableName): Collection
     {
-        $foreignKeys = $this->connection()->table('information_schema.table_constraints as tc')
-            ->join('information_schema.key_column_usage as kcu', function ($join) {
-                $join->on('tc.constraint_catalog', '=', 'kcu.constraint_catalog')
-                    ->on('tc.constraint_schema', '=', 'kcu.constraint_schema')
-                    ->on('tc.constraint_name', '=', 'kcu.constraint_name');
-            })
-            ->join('information_schema.referential_constraints as rc', function ($join) {
-                $join->on('rc.constraint_catalog', '=', 'tc.constraint_catalog')
-                    ->on('rc.constraint_schema', '=', 'tc.constraint_schema')
-                    ->on('rc.constraint_name', '=', 'tc.constraint_name');
-            })
-            ->where('tc.constraint_type', 'FOREIGN KEY')
-            ->whereRaw('LOWER(tc.constraint_catalog) = ?', [$this->scope->normalizedCatalog()])
-            ->whereRaw('LOWER(tc.table_schema) = ?', [$this->scope->normalizedSchema()])
-            ->whereRaw('LOWER(tc.table_name) = ?', [strtolower($tableName)])
-            ->whereNotNull('kcu.referenced_table_name')
-            ->orderBy('kcu.constraint_name')
-            ->orderBy('kcu.ordinal_position')
-            ->select([
-                'kcu.constraint_name as constraint_name',
-                'kcu.column_name as column_name',
-                'kcu.referenced_table_name as referenced_table_name',
-                'kcu.referenced_column_name as referenced_column_name',
-                'rc.update_rule as update_rule',
-                'rc.delete_rule as delete_rule',
-            ])
-            ->get()
+        // PostgreSQL exposes referenced columns via constraint_column_usage, not key_column_usage.
+        $rows = $this->connection()->select(
+            <<<'SQL'
+            SELECT
+                tc.constraint_name AS constraint_name,
+                kcu.column_name AS column_name,
+                ccu.table_name AS referenced_table_name,
+                ccu.column_name AS referenced_column_name,
+                rc.update_rule AS update_rule,
+                rc.delete_rule AS delete_rule
+            FROM information_schema.table_constraints AS tc
+            JOIN information_schema.key_column_usage AS kcu
+              ON tc.constraint_catalog = kcu.constraint_catalog
+             AND tc.constraint_schema = kcu.constraint_schema
+             AND tc.constraint_name = kcu.constraint_name
+             AND tc.table_catalog = kcu.table_catalog
+             AND tc.table_schema = kcu.table_schema
+             AND tc.table_name = kcu.table_name
+            JOIN information_schema.referential_constraints AS rc
+              ON rc.constraint_catalog = tc.constraint_catalog
+             AND rc.constraint_schema = tc.constraint_schema
+             AND rc.constraint_name = tc.constraint_name
+            JOIN LATERAL (
+                SELECT ccu.table_name, ccu.column_name
+                FROM information_schema.constraint_column_usage AS ccu
+                WHERE ccu.constraint_catalog = tc.constraint_catalog
+                  AND ccu.constraint_schema = tc.constraint_schema
+                  AND ccu.constraint_name = tc.constraint_name
+                ORDER BY ccu.column_name
+                OFFSET GREATEST(COALESCE(kcu.position_in_unique_constraint, kcu.ordinal_position) - 1, 0)
+                LIMIT 1
+            ) AS ccu ON true
+            WHERE tc.constraint_type = 'FOREIGN KEY'
+              AND LOWER(tc.constraint_catalog) = ?
+              AND LOWER(tc.table_schema) = ?
+              AND LOWER(tc.table_name) = ?
+            ORDER BY tc.constraint_name, kcu.ordinal_position
+            SQL,
+            [
+                $this->scope->normalizedCatalog(),
+                $this->scope->normalizedSchema(),
+                strtolower($tableName),
+            ]
+        );
+
+        return collect($rows)
             ->groupBy('constraint_name')
             ->map(function ($constraintGroup) {
                 $first = $constraintGroup->first();
@@ -151,9 +170,8 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
                     'on_update' => $first->update_rule,
                     'on_delete' => $first->delete_rule,
                 ];
-            });
-
-        return $foreignKeys->values();
+            })
+            ->values();
     }
 
     public function getTableEngine(string $tableName): ?string

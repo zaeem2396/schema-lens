@@ -12,6 +12,7 @@ Nothing yet.
 
 ### Fixed
 
+- **PostgreSQL foreign keys** — `getForeignKeys()` and rollback referencing-table lookup use `information_schema.constraint_column_usage` (PostgreSQL has no `referenced_table_name` on `key_column_usage`, unlike MySQL).
 - **PostgreSQL catalog scope** — `PostgresCatalogScope` centralizes database + `schema` resolution (default `public`) with case-insensitive `information_schema` matching across introspection and rollback FK discovery.
 - **Index introspection** — Primary keys expose a `primary` flag; expression-only indexes without column names are omitted to avoid empty index entries.
 - **Column types** — `PostgresColumnTypeFormatter` handles `serial` / `bigserial`, `int2` / `int8`, `bool`, `interval`, `inet`, `money`, and `ARRAY` (`udt[]`) types for stable `schema:diff` output.
