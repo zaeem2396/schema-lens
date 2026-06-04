@@ -22,6 +22,14 @@ class PostgresColumnTypeFormatter
             return $udt !== '' ? $udt : 'user-defined';
         }
 
+        if ($dataType === 'array' && $udt !== '') {
+            return $udt.'[]';
+        }
+
+        if (in_array($udt, ['serial', 'bigserial', 'smallserial'], true)) {
+            return $udt;
+        }
+
         return match ($dataType) {
             'character varying' => ($maxLen !== null && $maxLen !== '') ? 'varchar('.(int) $maxLen.')' : 'varchar',
             'character' => ($maxLen !== null && $maxLen !== '') ? 'char('.(int) $maxLen.')' : 'char',
@@ -29,7 +37,7 @@ class PostgresColumnTypeFormatter
             'boolean' => 'boolean',
             'smallint' => 'smallint',
             'integer', 'int4' => 'integer',
-            'bigint' => 'bigint',
+            'bigint', 'int8' => 'bigint',
             'real', 'float4' => 'real',
             'double precision', 'float8' => 'double precision',
             'numeric', 'decimal' => self::numericType($precision, $scale),
@@ -38,11 +46,14 @@ class PostgresColumnTypeFormatter
             'date' => 'date',
             'time with time zone' => 'timetz',
             'time without time zone' => 'time',
+            'interval' => 'interval',
             'uuid' => 'uuid',
             'json' => 'json',
             'jsonb' => 'jsonb',
             'bytea' => 'bytea',
-            default => $udt !== '' ? $udt : ($dataType !== '' ? $dataType : 'unknown'),
+            'inet' => 'inet',
+            'money' => 'money',
+            default => self::formatFromUdt($udt, $dataType),
         };
     }
 
@@ -81,6 +92,23 @@ class PostgresColumnTypeFormatter
         }
 
         return null;
+    }
+
+    protected static function formatFromUdt(string $udt, string $dataType): string
+    {
+        return match ($udt) {
+            'int2' => 'smallint',
+            'int4' => 'integer',
+            'int8' => 'bigint',
+            'float4' => 'real',
+            'float8' => 'double precision',
+            'bool' => 'boolean',
+            'serial' => 'serial',
+            'bigserial' => 'bigserial',
+            'smallserial' => 'smallserial',
+            'varchar', 'bpchar' => $dataType !== '' ? $dataType : $udt,
+            default => $udt !== '' ? $udt : ($dataType !== '' ? $dataType : 'unknown'),
+        };
     }
 
     protected static function numericType(mixed $precision, mixed $scale): string
