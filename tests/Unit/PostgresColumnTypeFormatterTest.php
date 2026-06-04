@@ -51,4 +51,39 @@ class PostgresColumnTypeFormatterTest extends TestCase
         ];
         $this->assertSame('citext', PostgresColumnTypeFormatter::format($col));
     }
+
+    /** @test */
+    public function formats_int2_udt_as_smallint(): void
+    {
+        $col = (object) ['data_type' => 'smallint', 'udt_name' => 'int2'];
+        $this->assertSame('smallint', PostgresColumnTypeFormatter::format($col));
+    }
+
+    /** @test */
+    public function formats_serial_udt(): void
+    {
+        $col = (object) ['data_type' => 'integer', 'udt_name' => 'serial'];
+        $this->assertSame('serial', PostgresColumnTypeFormatter::format($col));
+    }
+
+    /** @test */
+    public function formats_array_columns_with_udt_suffix(): void
+    {
+        $col = (object) ['data_type' => 'ARRAY', 'udt_name' => '_int4'];
+        $this->assertSame('_int4[]', PostgresColumnTypeFormatter::format($col));
+    }
+
+    /** @test */
+    public function formats_interval_type(): void
+    {
+        $col = (object) ['data_type' => 'interval', 'udt_name' => 'interval'];
+        $this->assertSame('interval', PostgresColumnTypeFormatter::format($col));
+    }
+
+    /** @test */
+    public function formats_bigserial_udt(): void
+    {
+        $col = (object) ['data_type' => 'bigint', 'udt_name' => 'bigserial'];
+        $this->assertSame('bigserial', PostgresColumnTypeFormatter::format($col));
+    }
 }
