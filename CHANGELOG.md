@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Nothing yet.
 
+## [1.8.1] - 2026-06-04
+
+### Fixed
+
+- **PostgreSQL catalog scope** — `PostgresCatalogScope` centralizes database + `schema` resolution (default `public`) with case-insensitive `information_schema` matching across introspection and rollback FK discovery.
+- **Index introspection** — Primary keys expose a `primary` flag; expression-only indexes without column names are omitted to avoid empty index entries.
+- **Column types** — `PostgresColumnTypeFormatter` handles `serial` / `bigserial`, `int2` / `int8`, `bool`, `interval`, `inet`, `money`, and `ARRAY` (`udt[]`) types for stable `schema:diff` output.
+- **Rollback FK lookup** — `RollbackSimulator::findReferencingTables()` uses normalized catalog/schema names on PostgreSQL (fixes missed matches when catalog casing differs).
+
+### Added
+
+- **`PostgreSQLStabilizationTest`** — Foreign keys, primary indexes, quoted rollback SQL, and paired `pgsql` `schema:diff` smoke tests (CI `postgres-package` job).
+- Unit tests for `PostgresCatalogScope` and expanded `PostgresColumnTypeFormatter` coverage.
+
+### Documentation
+
+- README, USAGE, TESTING-SCENARIOS (scenario 25), ROADMAP release table, and `config/schema-lens.php` comments updated for v1.8.1 stabilization.
+
 ## [1.8.0] - 2026-05-12
 
 ### Added
