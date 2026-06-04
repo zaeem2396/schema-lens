@@ -360,7 +360,7 @@ php artisan schema:restore /backups/pre-migrate.sql
 
 **Branch:** `feature/postgresql-support`
 
-**Status:** ✅ Released in v1.8.0; **v1.8.1** stabilization (`hotfix/v1.8.1`) adds `PostgresCatalogScope`, primary index metadata, expanded type formatting, and case-insensitive rollback FK discovery. `--sql` / `SqlGenerator` output remains primarily MySQL-flavored until a dialect switch is introduced.
+**Status:** ✅ Released in v1.8.0; **v1.8.1** stabilization (`hotfix/v1.8.1`, tag `v1.8.1`) adds `PostgresCatalogScope`, foreign keys via `constraint_column_usage`, primary index metadata, expanded type formatting, and case-insensitive rollback FK discovery. `--sql` / `SqlGenerator` output remains primarily MySQL-flavored until a dialect switch is introduced.
 
 **Description:**  
 Extend schema introspection so PostgreSQL applications can run `schema:preview`, `migrate:safe`, and `schema:diff` against real databases.
@@ -976,7 +976,7 @@ git push origin feature/interactive-mode
 
 | Date | Version | Changes |
 |------|---------|---------|
-| Jun 2026 | v1.8.1 | `PostgresCatalogScope`, primary index flag, richer Postgres type formatting, rollback FK catalog fix, `PostgreSQLStabilizationTest` |
+| Jun 2026 | v1.8.1 | `PostgresCatalogScope`, FK introspection via `constraint_column_usage`, primary index flag, richer Postgres types, rollback FK catalog fix, `PostgreSQLStabilizationTest` |
 | May 2026 | v1.8.0 | PostgreSQL introspection via `SchemaIntrospector`, paired `pgsql` support for `schema:diff`, Postgres rollback hints, and PostgreSQL CI job |
 | Apr 2026 | v1.7.0 | `migrate:safe --backup` / `--backup-path`, `schema-lens.backup` config, `BackupManager` + mysqldump drivers, `schema:restore`; roadmap status tables; scenario 23 |
 | Apr 2026 | v1.6.0 | `schema:diff` — compare MySQL schemas across two Laravel DB connections; JSON and `--stubs`; optional named connection on `SchemaIntrospector`; docs and scenario 22 |
