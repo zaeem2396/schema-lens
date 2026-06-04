@@ -4,6 +4,7 @@ namespace Zaeem2396\SchemaLens\Services;
 
 use Illuminate\Support\Collection;
 use Zaeem2396\SchemaLens\Services\Introspection\MySqlInformationSchemaDriver;
+use Zaeem2396\SchemaLens\Services\Introspection\PostgresCatalogScope;
 use Zaeem2396\SchemaLens\Services\Introspection\PostgresInformationSchemaDriver;
 
 class RollbackSimulator
@@ -136,9 +137,9 @@ class RollbackSimulator
             ->whereRaw('LOWER(kcu.referenced_table_name) = ?', [strtolower($tableName)]);
 
         if (PostgresInformationSchemaDriver::supports($driver)) {
-            $schema = (string) ($conn->getConfig('schema') ?? 'public');
-            $query->where('kcu.referenced_table_catalog', $conn->getDatabaseName())
-                ->whereRaw('LOWER(kcu.referenced_table_schema) = ?', [strtolower($schema)]);
+            $scope = PostgresCatalogScope::fromConnection($conn);
+            $query->whereRaw('LOWER(kcu.referenced_table_catalog) = ?', [$scope->normalizedCatalog()])
+                ->whereRaw('LOWER(kcu.referenced_table_schema) = ?', [$scope->normalizedSchema()]);
         } elseif (MySqlInformationSchemaDriver::supports($driver)) {
             $query->where('kcu.referenced_table_schema', $conn->getDatabaseName())
                 ->where('kcu.referenced_table_name', $tableName);
