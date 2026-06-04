@@ -62,8 +62,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | No extra options here: pass Laravel connection names from config/database.php.
-    | Both connections must use the same driver: mysql/mariadb, or both pgsql
-    | (PostgreSQL uses the connection “schema”, default `public`).
+    | Both connections must use the same driver: mysql/mariadb, or both pgsql.
+    |
+    | PostgreSQL: set `schema` on each connection in config/database.php (default
+    | `public`). Schema Lens scopes catalog queries to that schema via PostgresCatalogScope.
     |
     */
 
