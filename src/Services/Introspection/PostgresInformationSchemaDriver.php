@@ -9,9 +9,13 @@ use Zaeem2396\SchemaLens\Contracts\SchemaIntrospectionDriverContract;
 class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContract
 {
     public function __construct(
-        protected Connection $connection,
-        protected string $schemaName
+        protected PostgresCatalogScope $scope
     ) {}
+
+    public static function fromConnection(Connection $connection): self
+    {
+        return new self(PostgresCatalogScope::fromConnection($connection));
+    }
 
     public static function supports(string $driverName): bool
     {
@@ -20,9 +24,9 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
 
     public function getTables(): Collection
     {
-        return $this->connection->table('information_schema.tables')
-            ->whereRaw('LOWER(table_catalog) = ?', [strtolower($this->catalogName())])
-            ->whereRaw('LOWER(table_schema) = ?', [strtolower($this->schemaName)])
+        return $this->connection()->table('information_schema.tables')
+            ->whereRaw('LOWER(table_catalog) = ?', [$this->scope->normalizedCatalog()])
+            ->whereRaw('LOWER(table_schema) = ?', [$this->scope->normalizedSchema()])
             ->where('table_type', 'BASE TABLE')
             ->orderBy('table_name')
             ->pluck('table_name');
@@ -30,9 +34,9 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
 
     public function getColumns(string $tableName): Collection
     {
-        return $this->connection->table('information_schema.columns')
-            ->whereRaw('LOWER(table_catalog) = ?', [strtolower($this->catalogName())])
-            ->whereRaw('LOWER(table_schema) = ?', [strtolower($this->schemaName)])
+        return $this->connection()->table('information_schema.columns')
+            ->whereRaw('LOWER(table_catalog) = ?', [$this->scope->normalizedCatalog()])
+            ->whereRaw('LOWER(table_schema) = ?', [$this->scope->normalizedSchema()])
             ->whereRaw('LOWER(table_name) = ?', [strtolower($tableName)])
             ->orderBy('ordinal_position')
             ->get()
@@ -55,11 +59,12 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
 
     public function getIndexes(string $tableName): Collection
     {
-        $rows = $this->connection->select(
+        $rows = $this->connection()->select(
             <<<'SQL'
             SELECT
                 ix.relname AS index_name,
                 bool_or(ind.indisunique) AS is_unique,
+                bool_or(ind.indisprimary) AS is_primary,
                 am.amname AS index_method,
                 string_agg(att.attname::text, ',' ORDER BY ar.ordinality) AS column_names
             FROM pg_class tbl
@@ -76,55 +81,83 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
             GROUP BY ix.relname, am.amname
             ORDER BY ix.relname
             SQL,
-            [$this->schemaName, $tableName]
+            [$this->scope->schemaName, $tableName]
         );
 
-        return collect($rows)->map(function ($row) {
-            $cols = array_values(array_filter(explode(',', $row->column_names ?? '')));
+        return collect($rows)
+            ->map(function ($row) {
+                $cols = array_values(array_filter(explode(',', $row->column_names ?? '')));
 
-            $unique = filter_var($row->is_unique, FILTER_VALIDATE_BOOLEAN);
-            if ($row->is_unique === true || $row->is_unique === 't') {
-                $unique = true;
-            }
+                $unique = filter_var($row->is_unique, FILTER_VALIDATE_BOOLEAN);
+                if ($row->is_unique === true || $row->is_unique === 't') {
+                    $unique = true;
+                }
 
-            return [
-                'name' => $row->index_name,
-                'columns' => $cols,
-                'unique' => $unique,
-                'type' => (string) $row->index_method,
-            ];
-        });
+                $primary = filter_var($row->is_primary, FILTER_VALIDATE_BOOLEAN);
+                if ($row->is_primary === true || $row->is_primary === 't') {
+                    $primary = true;
+                }
+
+                return [
+                    'name' => $row->index_name,
+                    'columns' => $cols,
+                    'unique' => $unique,
+                    'primary' => $primary,
+                    'type' => (string) $row->index_method,
+                ];
+            })
+            ->filter(fn (array $index) => $index['columns'] !== [] || $index['primary'])
+            ->values();
     }
 
     public function getForeignKeys(string $tableName): Collection
     {
-        $foreignKeys = $this->connection->table('information_schema.table_constraints as tc')
-            ->join('information_schema.key_column_usage as kcu', function ($join) {
-                $join->on('tc.constraint_catalog', '=', 'kcu.constraint_catalog')
-                    ->on('tc.constraint_schema', '=', 'kcu.constraint_schema')
-                    ->on('tc.constraint_name', '=', 'kcu.constraint_name');
-            })
-            ->join('information_schema.referential_constraints as rc', function ($join) {
-                $join->on('rc.constraint_catalog', '=', 'tc.constraint_catalog')
-                    ->on('rc.constraint_schema', '=', 'tc.constraint_schema')
-                    ->on('rc.constraint_name', '=', 'tc.constraint_name');
-            })
-            ->where('tc.constraint_type', 'FOREIGN KEY')
-            ->whereRaw('LOWER(tc.constraint_catalog) = ?', [strtolower($this->catalogName())])
-            ->whereRaw('LOWER(tc.table_schema) = ?', [strtolower($this->schemaName)])
-            ->whereRaw('LOWER(tc.table_name) = ?', [strtolower($tableName)])
-            ->whereNotNull('kcu.referenced_table_name')
-            ->orderBy('kcu.constraint_name')
-            ->orderBy('kcu.ordinal_position')
-            ->select([
-                'kcu.constraint_name as constraint_name',
-                'kcu.column_name as column_name',
-                'kcu.referenced_table_name as referenced_table_name',
-                'kcu.referenced_column_name as referenced_column_name',
-                'rc.update_rule as update_rule',
-                'rc.delete_rule as delete_rule',
-            ])
-            ->get()
+        // PostgreSQL exposes referenced columns via constraint_column_usage, not key_column_usage.
+        $rows = $this->connection()->select(
+            <<<'SQL'
+            SELECT
+                tc.constraint_name AS constraint_name,
+                kcu.column_name AS column_name,
+                ccu.table_name AS referenced_table_name,
+                ccu.column_name AS referenced_column_name,
+                rc.update_rule AS update_rule,
+                rc.delete_rule AS delete_rule
+            FROM information_schema.table_constraints AS tc
+            JOIN information_schema.key_column_usage AS kcu
+              ON tc.constraint_catalog = kcu.constraint_catalog
+             AND tc.constraint_schema = kcu.constraint_schema
+             AND tc.constraint_name = kcu.constraint_name
+             AND tc.table_catalog = kcu.table_catalog
+             AND tc.table_schema = kcu.table_schema
+             AND tc.table_name = kcu.table_name
+            JOIN information_schema.referential_constraints AS rc
+              ON rc.constraint_catalog = tc.constraint_catalog
+             AND rc.constraint_schema = tc.constraint_schema
+             AND rc.constraint_name = tc.constraint_name
+            JOIN LATERAL (
+                SELECT ccu.table_name, ccu.column_name
+                FROM information_schema.constraint_column_usage AS ccu
+                WHERE ccu.constraint_catalog = tc.constraint_catalog
+                  AND ccu.constraint_schema = tc.constraint_schema
+                  AND ccu.constraint_name = tc.constraint_name
+                ORDER BY ccu.column_name
+                OFFSET GREATEST(COALESCE(kcu.position_in_unique_constraint, kcu.ordinal_position) - 1, 0)
+                LIMIT 1
+            ) AS ccu ON true
+            WHERE tc.constraint_type = 'FOREIGN KEY'
+              AND LOWER(tc.constraint_catalog) = ?
+              AND LOWER(tc.table_schema) = ?
+              AND LOWER(tc.table_name) = ?
+            ORDER BY tc.constraint_name, kcu.ordinal_position
+            SQL,
+            [
+                $this->scope->normalizedCatalog(),
+                $this->scope->normalizedSchema(),
+                strtolower($tableName),
+            ]
+        );
+
+        return collect($rows)
             ->groupBy('constraint_name')
             ->map(function ($constraintGroup) {
                 $first = $constraintGroup->first();
@@ -137,9 +170,8 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
                     'on_update' => $first->update_rule,
                     'on_delete' => $first->delete_rule,
                 ];
-            });
-
-        return $foreignKeys->values();
+            })
+            ->values();
     }
 
     public function getTableEngine(string $tableName): ?string
@@ -159,9 +191,9 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
 
     public function tableExists(string $tableName): bool
     {
-        return $this->connection->table('information_schema.tables')
-            ->whereRaw('LOWER(table_catalog) = ?', [strtolower($this->catalogName())])
-            ->whereRaw('LOWER(table_schema) = ?', [strtolower($this->schemaName)])
+        return $this->connection()->table('information_schema.tables')
+            ->whereRaw('LOWER(table_catalog) = ?', [$this->scope->normalizedCatalog()])
+            ->whereRaw('LOWER(table_schema) = ?', [$this->scope->normalizedSchema()])
             ->whereRaw('LOWER(table_name) = ?', [strtolower($tableName)])
             ->where('table_type', 'BASE TABLE')
             ->exists();
@@ -169,17 +201,17 @@ class PostgresInformationSchemaDriver implements SchemaIntrospectionDriverContra
 
     public function columnExists(string $tableName, string $columnName): bool
     {
-        return $this->connection->table('information_schema.columns')
-            ->whereRaw('LOWER(table_catalog) = ?', [strtolower($this->catalogName())])
-            ->whereRaw('LOWER(table_schema) = ?', [strtolower($this->schemaName)])
+        return $this->connection()->table('information_schema.columns')
+            ->whereRaw('LOWER(table_catalog) = ?', [$this->scope->normalizedCatalog()])
+            ->whereRaw('LOWER(table_schema) = ?', [$this->scope->normalizedSchema()])
             ->whereRaw('LOWER(table_name) = ?', [strtolower($tableName)])
             ->whereRaw('LOWER(column_name) = ?', [strtolower($columnName)])
             ->exists();
     }
 
-    protected function catalogName(): string
+    protected function connection(): Connection
     {
-        return (string) $this->connection->getDatabaseName();
+        return $this->scope->connection;
     }
 
     /**

@@ -1,6 +1,6 @@
 # Schema Lens Roadmap
 
-> **Current Version:** v1.8.0  
+> **Current Version:** v1.8.1  
 > **Last Updated:** June 2026
 
 This document outlines the planned features and enhancements for Schema Lens. Each feature includes a dedicated git branch name for tracking development progress.
@@ -27,7 +27,7 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 
 ## Release Roadmap
 
-> **Current release:** v1.8.0 — see [Changelog](#changelog) for dated entries.
+> **Current release:** v1.8.1 — see [Changelog](#changelog) for dated entries.
 
 ### Released
 
@@ -51,12 +51,12 @@ This document outlines the planned features and enhancements for Schema Lens. Ea
 | v1.7.0 | Backup Before Migration | 🟢 Complete | `feature/auto-backup` |
 | v1.7.1 | Backup Retention Improvements | 🟢 Complete | `hotfix/v1.7.1` |
 | v1.8.0 | PostgreSQL Support | 🟢 Complete | `feature/postgresql-support` |
+| v1.8.1 | PostgreSQL Stabilization & Bug Fixes | 🟢 Complete | `hotfix/v1.8.1` |
 
 ## Upcoming Releases
 
 | Version | Feature | Status | Branch |
 |---------|---------|--------|--------|
-| v1.8.1 | PostgreSQL Stabilization & Bug Fixes | 🔴 Planned | `hotfix/v1.8.1` |
 | v1.8.2 | PostgreSQL Documentation & Examples | 🔴 Planned | `hotfix/v1.8.2` |
 | v1.9.0 | SQLite Support | 🔴 Planned | `feature/sqlite-support` |
 | v1.9.1 | SQLite Compatibility Fixes | 🔴 Planned | `hotfix/v1.9.1` |
@@ -356,18 +356,19 @@ php artisan schema:restore /backups/pre-migrate.sql
 
 ## Phase 2: Database Support Expansion
 
-### 2.1 PostgreSQL Support ✅ IMPLEMENTED
+### 2.1 PostgreSQL Support ✅ IMPLEMENTED (v1.8.0, stabilized v1.8.1)
 
 **Branch:** `feature/postgresql-support`
 
-**Status:** ✅ Released in v1.8.0 — Core introspection, `schema:diff` for paired `pgsql` connections, and rollback hint SQL parity for Postgres; `--sql` / `SqlGenerator` output remains primarily MySQL-flavored until a dialect switch is introduced.
+**Status:** ✅ Released in v1.8.0; **v1.8.1** stabilization (`hotfix/v1.8.1`) adds `PostgresCatalogScope`, primary index metadata, expanded type formatting, and case-insensitive rollback FK discovery. `--sql` / `SqlGenerator` output remains primarily MySQL-flavored until a dialect switch is introduced.
 
 **Description:**  
 Extend schema introspection so PostgreSQL applications can run `schema:preview`, `migrate:safe`, and `schema:diff` against real databases.
 
 **Features:**
-- **`PostgresInformationSchemaDriver`**: catalogs, columns, FKs via `information_schema`; indexes via `pg_index` aggregation
-- **Type normalization** via `PostgresColumnTypeFormatter` (including `nextval`/serial placeholders in `extra`)
+- **`PostgresCatalogScope`** (v1.8.1): normalized database + schema scope for all Postgres catalog queries
+- **`PostgresInformationSchemaDriver`**: catalogs, columns, FKs via `information_schema`; indexes via `pg_index` aggregation with `primary` flag
+- **Type normalization** via `PostgresColumnTypeFormatter` (including `nextval`/serial, arrays, `int2`/`int8`, `interval`)
 - **`schema:diff`**: paired `pgsql` connections (same-driver rule as MySQL pairs)
 - **`RollbackSimulator`**: Postgres-aware FK discovery and rollback hint DDL (quoted identifiers, `DROP CONSTRAINT`, `DROP INDEX`)
 
@@ -386,6 +387,7 @@ php artisan schema:diff pgsql_a pgsql_b
 **Files:**
 - `src/Contracts/SchemaIntrospectionDriverContract.php`
 - `src/Services/Introspection/MySqlInformationSchemaDriver.php`
+- `src/Services/Introspection/PostgresCatalogScope.php`
 - `src/Services/Introspection/PostgresInformationSchemaDriver.php`
 - `src/Services/Introspection/PostgresColumnTypeFormatter.php`
 - `src/Services/SchemaIntrospector.php`
@@ -974,6 +976,7 @@ git push origin feature/interactive-mode
 
 | Date | Version | Changes |
 |------|---------|---------|
+| Jun 2026 | v1.8.1 | `PostgresCatalogScope`, primary index flag, richer Postgres type formatting, rollback FK catalog fix, `PostgreSQLStabilizationTest` |
 | May 2026 | v1.8.0 | PostgreSQL introspection via `SchemaIntrospector`, paired `pgsql` support for `schema:diff`, Postgres rollback hints, and PostgreSQL CI job |
 | Apr 2026 | v1.7.0 | `migrate:safe --backup` / `--backup-path`, `schema-lens.backup` config, `BackupManager` + mysqldump drivers, `schema:restore`; roadmap status tables; scenario 23 |
 | Apr 2026 | v1.6.0 | `schema:diff` — compare MySQL schemas across two Laravel DB connections; JSON and `--stubs`; optional named connection on `SchemaIntrospector`; docs and scenario 22 |

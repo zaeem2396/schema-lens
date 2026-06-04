@@ -1,6 +1,6 @@
 # Schema Lens - Complete Usage Guide
 
-Version history and release notes are maintained in [CHANGELOG.md](CHANGELOG.md) (e.g. **v1.6.0** `schema:diff`, **v1.7.0** backup before migration, **v1.8.0** PostgreSQL support).
+Version history and release notes are maintained in [CHANGELOG.md](CHANGELOG.md) (e.g. **v1.6.0** `schema:diff`, **v1.7.0** backup before migration, **v1.8.0** PostgreSQL support, **v1.8.1** PostgreSQL stabilization).
 
 ## Table of Contents
 1. [Installation](#installation)
@@ -642,6 +642,13 @@ fi
 ---
 
 ## Troubleshooting
+
+### Issue: PostgreSQL `schema:diff` or introspection misses tables
+
+**Solution:**
+- Set `'schema' => 'public'` (or your custom schema) on **both** `pgsql` connections in `config/database.php`.
+- Ensure `DB_SCHEMA` / connection `schema` matches where Laravel migrations created tables (v1.8.1+ uses `PostgresCatalogScope` for case-insensitive catalog matching).
+- Run `composer check` locally; use the GitHub Actions **postgres-package** job to exercise `PostgreSQLStabilizationTest` when `pdo_pgsql` is not installed on your machine.
 
 ### Issue: "Migration file not found"
 

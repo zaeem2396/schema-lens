@@ -205,6 +205,16 @@ Requires Laravel `pgsql` connection (see GitHub Actions **postgres-package** job
 - [ ] Inspect rollback hint output on Postgres: identifiers double-quoted, FK drops use `DROP CONSTRAINT`
 - [ ] Run `composer check`; CI Postgres job exercises `PostgreSQLSchemaIntrospectionTest` automatically
 
+### 25. PostgreSQL stabilization (v1.8.1, `hotfix/v1.8.1`)
+
+Requires `DB_CONNECTION=pgsql` (CI **postgres-package** job).
+
+- [ ] Create parent/child tables with `foreignId()->constrained()` — `SchemaIntrospector::getForeignKeys()` returns referenced table/columns
+- [ ] Table with `$table->id()` — `getIndexes()` includes an index with `'primary' => true` on `id`
+- [ ] Rollback simulation on a fixture with `down()` dropping a table — SQL uses double-quoted identifiers (`"users"`), not backticks
+- [ ] Two `pgsql` connections pointing at the same DB — `schema:diff conn_a conn_b --exit-zero` succeeds
+- [ ] Unit tests: `PostgresCatalogScopeTest`, expanded `PostgresColumnTypeFormatterTest` pass under `composer check`
+
 ---
 
 ## Edge Cases to Test

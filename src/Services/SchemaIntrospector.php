@@ -47,9 +47,7 @@ class SchemaIntrospector
             return new MySqlInformationSchemaDriver($conn, (string) $conn->getDatabaseName());
         }
         if (PostgresInformationSchemaDriver::supports($driver)) {
-            $schema = $conn->getConfig('schema') ?? 'public';
-
-            return new PostgresInformationSchemaDriver($conn, (string) $schema);
+            return PostgresInformationSchemaDriver::fromConnection($conn);
         }
 
         throw new RuntimeException(

@@ -16,7 +16,7 @@
 
 A Laravel package that extends the default Artisan CLI with commands to preview a single migration file against the current database schema before execution. It provides comprehensive schema diff analysis, destructive change detection, automatic data export, and rollback simulation.
 
-**Release highlights:** **v1.8.0** adds PostgreSQL schema introspection and paired `pgsql` support for `schema:diff`. **v1.7.0** adds optional full-database backup before safe migrations (`migrate:safe --backup`), `schema-lens.backup` configuration, and `schema:restore` for restore hints. **v1.6.0** adds `schema:diff` across two MySQL connections. Details: [CHANGELOG.md](CHANGELOG.md).
+**Release highlights:** **v1.8.1** stabilizes PostgreSQL introspection (catalog scope, primary indexes, richer type formatting, rollback FK lookup). **v1.8.0** adds PostgreSQL schema introspection and paired `pgsql` support for `schema:diff`. **v1.7.0** adds optional full-database backup before safe migrations (`migrate:safe --backup`), `schema-lens.backup` configuration, and `schema:restore` for restore hints. Details: [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
 
@@ -540,7 +540,8 @@ migration-preview:
 - **“Schema Lens schema introspection requires MySQL, MariaDB, or PostgreSQL”** — Point the default Laravel DB connection (or `--connection` flows) at MySQL/MariaDB/PostgreSQL, or use `--sql`-only preview on unsupported drivers locally.
 - **Debugging command failures** — Use `-v` or `--verbose` to see the full stack trace.
 - **Custom table engine in generated SQL** — Set `SCHEMA_LENS_SQL_ENGINE` or `config/schema-lens.sql.engine` (e.g. `MyISAM`) to override the engine in `CREATE TABLE` output.
-- **`schema:diff`** — Both connections must be **mysql/mariadb** or both **pgsql** (same driver family). Define them in `config/database.php`. For PostgreSQL, set `'schema'` (e.g. `public`) on each connection when not using defaults.
+- **`schema:diff`** — Both connections must be **mysql/mariadb** or both **pgsql** (same driver family). Define them in `config/database.php`. For PostgreSQL, set `'schema'` (e.g. `public`) on each connection; Schema Lens scopes catalog queries to that schema (v1.8.1+).
+- **PostgreSQL index output** — Introspection includes a `primary` flag on indexes and skips expression-only indexes with no column list.
 - **`schema:diff` exits 1 on drift** — Use `--exit-zero` in CI if you only want logs without failing the job.
 - **`mysqldump` not found** — Install MySQL client tools on the host or set `SCHEMA_LENS_MYSQLDUMP_PATH` to the full path of the `mysqldump` binary.
 
