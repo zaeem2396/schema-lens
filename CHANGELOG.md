@@ -27,6 +27,8 @@ Nothing yet.
 
 - README, USAGE, TESTING-SCENARIOS (scenario 25), ROADMAP release table, and `config/schema-lens.php` comments updated for v1.8.1 stabilization.
 
+Before tagging v1.8.1: run `composer check` (Pint, PHPStan, PHPUnit) and confirm the GitHub Actions **postgres-package** job passes.
+
 ## [1.8.0] - 2026-05-12
 
 ### Added

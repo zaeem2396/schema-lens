@@ -16,7 +16,7 @@
 
 A Laravel package that extends the default Artisan CLI with commands to preview a single migration file against the current database schema before execution. It provides comprehensive schema diff analysis, destructive change detection, automatic data export, and rollback simulation.
 
-**Release highlights:** **v1.8.1** stabilizes PostgreSQL introspection (catalog scope, primary indexes, richer type formatting, rollback FK lookup). **v1.8.0** adds PostgreSQL schema introspection and paired `pgsql` support for `schema:diff`. **v1.7.0** adds optional full-database backup before safe migrations (`migrate:safe --backup`), `schema-lens.backup` configuration, and `schema:restore` for restore hints. Details: [CHANGELOG.md](CHANGELOG.md).
+**Current release: v1.8.1** — stabilizes PostgreSQL introspection (`PostgresCatalogScope`, primary indexes, richer type formatting, foreign keys via `constraint_column_usage`, rollback FK lookup). **v1.8.0** added PostgreSQL schema introspection and paired `pgsql` `schema:diff`. **v1.7.0** added optional full-database backup (`migrate:safe --backup`) and `schema:restore` hints. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
 
